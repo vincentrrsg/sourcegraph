@@ -181,7 +181,12 @@ func (s *ScopedBackfiller) ScopedBackfill(ctx context.Context, definitions []ity
 	}
 
 	frontend := database.NewDBWith(s.logger, s.workerBaseStore)
-	iterator, err := discovery.NewScopedRepoIterator(ctx, repositories, frontend.Repos())
+	// iterator, err := discovery.NewScopedRepoIterator(ctx, repositories, frontend.Repos())
+	// if err != nil {
+	// 	return errors.Wrap(err, "NewScopedRepoIterator")
+	// }
+
+	iterator, err := discovery.NewDynamicRepoIterator(ctx, frontend)
 	if err != nil {
 		return errors.Wrap(err, "NewScopedRepoIterator")
 	}

@@ -5,6 +5,10 @@ import (
 	"reflect"
 	"testing"
 
+	"k8s.io/apimachinery/pkg/util/rand"
+
+	"github.com/RoaringBitmap/roaring"
+
 	"github.com/hexops/autogold"
 	"github.com/stretchr/testify/require"
 
@@ -261,5 +265,56 @@ func TestReplace_Invalid(t *testing.T) {
 	t.Run("filters with no pattern", func(t *testing.T) {
 		_, err := NewPatternReplacer("repo:repoA rev:3.40.0", query.SearchTypeStandard)
 		require.ErrorIs(t, err, UnsupportedPatternTypeErr)
+	})
+}
+
+func TestRoaring(t *testing.T) {
+	i := 100000
+
+	index := roaring.NewBitmap()
+	values := roaring.NewBitmap()
+
+	uncompressed := make([]int, 10000000)
+	uncompressed[3] = 1
+	uncompressed[21] = 12
+
+	for j := 0; j < i; j++ {
+		if j%2 == 0 {
+			// t.Log(j)
+			continue
+		}
+		index.AddInt(j)
+		values.AddInt(rand.IntnRange(1, 500))
+	}
+	t.Log("index bitmap")
+	t.Log(index.GetCardinality())
+	t.Log(index.GetSizeInBytes())
+	t.Log(index.GetSerializedSizeInBytes())
+
+	t.Log("values bitmap")
+	t.Log(values.GetCardinality())
+	t.Log(values.GetSizeInBytes())
+	t.Log(values.GetSerializedSizeInBytes())
+	// b := roaring.BitmapOf(1, 0, 1, 0, 1, 1, 1, 1, 0)
+	// t.Log(b.Maximum())
+	// t.Log(b.GetSizeInBytes())
+	// t.Log(b.GetSerializedSizeInBytes())
+
+	// index.WriteTo(os.Stdout)
+
+}
+
+type rle struct {
+}
+
+func TestThing(t *testing.T) {
+	q := `lang:gradle org\.apache\.logging\.log4j['"] (2\.\d+\.\d+)`
+	plan, err := query.Pipeline(query.Init(q, query.SearchTypeRegex))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	query.VisitPattern(plan.ToQ(), func(value string, negated bool, annotation query.Annotation) {
+		t.Log(value)
 	})
 }

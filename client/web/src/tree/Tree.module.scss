@@ -1,6 +1,4 @@
-:root {
-    --row-vertical-spacing: 0.25rem;
-}
+$row-vertical-spacing: 0.25rem;
 
 .tree {
     isolation: isolate;
@@ -32,8 +30,8 @@
     display: flex;
     color: inherit;
     align-items: center;
-    padding-top: var(--row-vertical-spacing);
-    padding-bottom: var(--row-vertical-spacing);
+    padding-top: $row-vertical-spacing;
+    padding-bottom: $row-vertical-spacing;
     cursor: pointer;
 }
 
@@ -107,8 +105,8 @@
 .tree-loading-spinner {
     display: flex;
     align-items: center;
-    padding-top: var(--row-vertical-spacing);
-    padding-bottom: var(--row-vertical-spacing);
+    padding-top: $row-vertical-spacing;
+    padding-bottom: $row-vertical-spacing;
 }
 
 .tree-icon {

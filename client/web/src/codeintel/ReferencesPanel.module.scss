@@ -1,12 +1,7 @@
-:root {
-    --filter-input-height: 2.5rem;
-    --group-header-font-size: 0.875rem;
-    --group-divider-height: 0.25rem;
-    --card-header-height: 1.5rem;
-}
+$filter-input-height: 2.5rem;
 
 .filter {
-    height: var(--filter-input-height);
+    height: $filter-input-height;
     padding-left: 1rem;
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
@@ -38,8 +33,11 @@
     }
 }
 
+$group-header-font-size: 0.875rem;
+$group-divider-height: 0.25rem;
+
 .repo-location-group {
-    margin-bottom: var(--group-divider-height);
+    margin-bottom: $group-divider-height;
 
     &:last-child {
         margin-bottom: 0;
@@ -56,13 +54,13 @@
 
         &--repo-name {
             padding-left: 0.6rem;
-            font-size: var(--group-header-font-size);
+            font-size: $group-header-font-size;
         }
     }
 }
 
 .location-group {
-    margin-bottom: var(--group-divider-height);
+    margin-bottom: $group-divider-height;
 
     &:last-child {
         margin-bottom: 0;
@@ -84,7 +82,7 @@
             justify-content: space-between;
 
             font-weight: 400;
-            font-size: var(--group-header-font-size);
+            font-size: $group-header-font-size;
 
             mark {
                 padding-left: 0;
@@ -170,6 +168,8 @@
     }
 }
 
+$card-header-height: 1.5rem;
+
 .card-header {
     padding-top: 0.1rem;
     padding-bottom: 0.1rem;
@@ -177,7 +177,7 @@
 
     border: none;
 
-    height: var(--card-header-height);
+    height: $card-header-height;
 
     background-color: var(--body-bg);
 
@@ -225,7 +225,7 @@
 
 // Lists of locations (definitions, references, implementations) on the left
 .location-lists {
-    height: calc(100% - var(--filter-input-height) - var(--card-header-height));
+    height: calc(100% - #{$filter-input-height} - #{$card-header-height});
     overflow: auto;
 }
 
@@ -242,6 +242,6 @@
     &--code {
         // The code view needs to be scrollable.
         // Its height needs to be "100% - <size-of-header-that-has-filename>"
-        height: calc(100% - var(--card-header-height));
+        height: calc(100% - #{$card-header-height});
     }
 }

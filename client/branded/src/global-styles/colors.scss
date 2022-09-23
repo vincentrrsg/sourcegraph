@@ -4,8 +4,13 @@
 @import 'open-color/open-color.scss';
 @import 'open-color/open-color.css';
 
+// Tell Bootstrap to use our colors.
 $blue: #0b70db;
+$indigo: #0864c6;
 $purple: #a305e1;
+$purple-01: #e8d1ff;
+$purple-03: #820dde;
+$pink: #d68cf3;
 $red: $oc-red-9;
 $orange: $oc-orange-7;
 $yellow: $oc-yellow-7;
@@ -71,11 +76,11 @@ $theme-colors: (
 
     // Other root palette colors.
     --blue: #{$blue};
-    --indigo: #0864c6;
+    --indigo: #{$indigo};
     --purple: #{$purple};
-    --purple-01: #e8d1ff;
-    --purple-03: #820dde;
-    --pink: #d68cf3;
+    --purple-01: #{$purple-01};
+    --purple-03: #{$purple-03};
+    --pink: #{$pink};
     --red: #{$red};
     --orange: #{$orange};
     --yellow: #{$yellow};

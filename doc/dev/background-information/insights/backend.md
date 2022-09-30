@@ -115,7 +115,7 @@ We support this behavior by tabulating the results of a `compute` [search](https
 
 ### (2) The _insight enqueuer_ (indexed recorder) detects the new insight
 
-The _insight enqueuer_ is a background goroutine running in the `worker` service of Sourcegraph ([code](https://sourcegraph.com/github.com/sourcegraph/sourcegraph@55be9054a2609e06a1d916cc2f782827421dd2a3/-/blob/enterprise/internal/insights/background/insight_enqueuer.go?L27:6)), which runs all background goroutines for Sourcegraph - so long as `DISABLE_CODE_INSIGHTS=true` is not set on the `worker` container/process.
+The _insight enqueuer_ is a background goroutine running in the `worker` service of Sourcegraph ([code](https://sourcegraph.com/github.com/sourcegraph/sourcegraph@55be9054a2609e06a1d916cc2f782827421dd2a3/-/blob/enterprise/internal/insights/background/insight_enqueuer.go?L27:6)), which runs all background goroutines for Sourcegraph—so long as `DISABLE_CODE_INSIGHTS=true` is not set on the `worker` container/process.
 
 Its job is to periodically schedule a recording of 'current' values for Insights by enqueuing a recording using a global query. This only requires a single query per insight regardless of the number of repositories,
 and will return results for all the matched repositories. Each repository will still be recorded individually. These queries are placed on the same queue as historical queries (`insights_query_runner_jobs`) and can
@@ -248,7 +248,7 @@ If you've created an insight that needs to generate series data on the backend, 
 
 ## Debugging
 
-This being a pretty complex, high cardinality, and slow-moving system - debugging can be tricky.
+This being a pretty complex, high cardinality, and slow-moving system—debugging can be tricky.
 
 In this section, I'll cover useful tips I have for debugging the system when developing it or otherwise using it.
 
@@ -375,4 +375,4 @@ You can omit all of the `*repo*` fields (nullable) if you want to store a data p
 
 `migrations/codeinsights` in the root of this repository contains the migrations for the Code Insights database, they are executed when the frontend starts up (as is the same with e.g. codeintel DB migrations.)
 
-Currently, the migration process blocks `frontend` and `worker` startup - which is one issue [we will need to solve](https://github.com/sourcegraph/sourcegraph/issues/18388).
+Currently, the migration process blocks `frontend` and `worker` startup—which is one issue [we will need to solve](https://github.com/sourcegraph/sourcegraph/issues/18388).

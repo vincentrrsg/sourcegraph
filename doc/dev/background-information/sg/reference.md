@@ -253,9 +253,9 @@ Flags:
 
 Get logs from CI builds (e.g. to grep locally).
 
-Get logs from CI builds, and output them in stdout or push them to Loki. By default only gets failed jobs - to change this, use the '--state' flag.
+Get logs from CI builds, and output them in stdout or push them to Loki. By default only gets failed jobs—to change this, use the '--state' flag.
 
-The '--job' flag can be used to narrow down the logs returned - you can provide either the ID, or part of the name of the job you want to see logs for.
+The '--job' flag can be used to narrow down the logs returned—you can provide either the ID, or part of the name of the job you want to see logs for.
 
 To send logs to a Loki instance, you can provide --out=http://127.0.0.1:3100 after spinning up an instance with 'sg run loki grafana'.
 From there, you can start exploring logs with the Grafana explore panel.
@@ -599,7 +599,7 @@ Flags:
 
 ### sg migration upto
 
-Ensure a given migration has been applied - may apply dependency migrations.
+Ensure a given migration has been applied—may apply dependency migrations.
 
 Available schemas:
 
@@ -624,7 +624,7 @@ Flags:
 
 ### sg migration undo
 
-Revert the last migration applied - useful in local development.
+Revert the last migration applied—useful in local development.
 
 Available schemas:
 
@@ -643,7 +643,7 @@ Flags:
 
 ### sg migration downto
 
-Revert any applied migrations that are children of the given targets - this effectively "resets" the schema to the target version.
+Revert any applied migrations that are children of the given targets—this effectively "resets" the schema to the target version.
 
 Available schemas:
 
@@ -948,7 +948,7 @@ Also refer to the generated reference documentation available for site admins:
 
 ### sg monitoring generate
 
-Generate monitoring assets - dashboards, alerts, and more.
+Generate monitoring assets—dashboards, alerts, and more.
 
 ```sh
 # Generate all monitoring with default configuration into a temporary directory
@@ -970,7 +970,7 @@ Flags:
 * `--grafana.dir="<value>"`: Output directory for generated Grafana assets (default: $SG_ROOT/docker-images/grafana/config/provisioning/dashboards/sourcegraph/)
 * `--grafana.url="<value>"`: Address for the Grafana instance to reload (default: http://127.0.0.1:3370)
 * `--inject-label-matcher="<value>"`: Labels to inject into all selectors in Prometheus expressions: observable queries, dashboard template variables, etc.
-* `--no-prune`: Toggles pruning of dangling generated assets through simple heuristic - should be disabled during builds.
+* `--no-prune`: Toggles pruning of dangling generated assets through simple heuristic—should be disabled during builds.
 * `--prometheus.dir="<value>"`: Output directory for generated Prometheus assets (default: $SG_ROOT/docker-images/prometheus/config/)
 * `--prometheus.url="<value>"`: Address for the Prometheus instance to reload (default: http://127.0.0.1:9090)
 * `--reload`: Trigger reload of active Prometheus or Grafana instance (requires respective output directories)
@@ -1249,7 +1249,7 @@ Flags:
 
 ## sg page
 
-Page engineers at Sourcegraph - mostly used within scripts to automate paging alerts.
+Page engineers at Sourcegraph—mostly used within scripts to automate paging alerts.
 
 ```sh
 $ sg page --opsgenie.token [TOKEN] --message "something is broken" [my-schedule-on-ops-genie]

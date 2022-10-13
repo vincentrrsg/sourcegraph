@@ -25,14 +25,14 @@ import (
 // NewDependencySyncScheduler returns a new worker instance that processes
 // records from lsif_dependency_syncing_jobs.
 func NewDependencySyncScheduler(
-	dependencySyncStore dbworkerstore.Store,
+	dependencySyncStore dbworkerstore.Store[shared.DependencySyncingJob],
 	uploadSvc UploadService,
 	depsSvc DependenciesService,
 	autoindexingSvc AutoIndexingService,
 	externalServiceStore ExternalServiceStore,
 	metrics workerutil.WorkerObservability,
 	pollInterval time.Duration,
-) *workerutil.Worker {
+) *workerutil.Worker[shared.DependencySyncingJob] {
 	rootContext := actor.WithInternalActor(context.Background())
 	handler := &dependencySyncSchedulerHandler{
 		uploadsSvc:      uploadSvc,
@@ -42,7 +42,7 @@ func NewDependencySyncScheduler(
 		extsvcStore:     externalServiceStore,
 	}
 
-	return dbworker.NewWorker(rootContext, dependencySyncStore, handler, workerutil.WorkerOptions{
+	return dbworker.NewWorker[shared.DependencySyncingJob](rootContext, dependencySyncStore, handler, workerutil.WorkerOptions{
 		Name:              "precise_code_intel_dependency_sync_scheduler_worker",
 		NumHandlers:       1,
 		Interval:          pollInterval,
@@ -55,7 +55,7 @@ type dependencySyncSchedulerHandler struct {
 	uploadsSvc      UploadService
 	depsSvc         DependenciesService
 	autoindexingSvc AutoIndexingService
-	workerStore     dbworkerstore.Store
+	workerStore     dbworkerstore.Store[shared.DependencySyncingJob]
 	extsvcStore     ExternalServiceStore
 }
 
@@ -70,12 +70,10 @@ var schemeToExternalService = map[string]string{
 	dependencies.RubyPackagesScheme:   extsvc.KindRubyPackages,
 }
 
-func (h *dependencySyncSchedulerHandler) Handle(ctx context.Context, logger log.Logger, record workerutil.Record) error {
+func (h *dependencySyncSchedulerHandler) Handle(ctx context.Context, logger log.Logger, job shared.DependencySyncingJob) error {
 	if !autoIndexingEnabled() {
 		return nil
 	}
-
-	job := record.(shared.DependencySyncingJob)
 
 	scanner, err := h.uploadsSvc.ReferencesForUpload(ctx, job.UploadID)
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 	metricsstore "github.com/sourcegraph/sourcegraph/internal/metrics/store"
 )
 
-func newExecutorQueueHandler(db database.DB, queueOptions []handler.QueueOptions, accessToken func() string, uploadHandler http.Handler, batchesWorkspaceFileGetHandler http.Handler, batchesWorkspaceFileExistsHandler http.Handler) (func() http.Handler, error) {
+func newExecutorQueueHandler(db database.DB, queueOptions map[string]handler.PubHandler, accessToken func() string, uploadHandler http.Handler, batchesWorkspaceFileGetHandler http.Handler, batchesWorkspaceFileExistsHandler http.Handler) (func() http.Handler, error) {
 	metricsStore := metricsstore.NewDistributedStore("executors:")
 	executorStore := db.Executors()
 	gitserverClient := gitserver.NewClient(db)

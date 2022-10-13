@@ -9,7 +9,7 @@ import (
 
 	"github.com/sourcegraph/log"
 
-	codeinteltypes "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/shared/types"
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/shared/types"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/uploads/shared"
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/authz"
@@ -28,14 +28,14 @@ type UploadService interface {
 	BackfillCommittedAtBatch(ctx context.Context, batchSize int) (err error)
 
 	// Uploads
-	GetUploads(ctx context.Context, opts shared.GetUploadsOptions) (uploads []codeinteltypes.Upload, totalCount int, err error)
+	GetUploads(ctx context.Context, opts shared.GetUploadsOptions) (uploads []types.Upload, totalCount int, err error)
 	SoftDeleteExpiredUploads(ctx context.Context, batchSize int) (int, error)
 	SoftDeleteExpiredUploadsViaTraversal(ctx context.Context, maxTraversal int) (int, error)
 	DeleteUploadsWithoutRepository(ctx context.Context, now time.Time) (_ map[int]int, err error)
 	DeleteUploadsStuckUploading(ctx context.Context, uploadedBefore time.Time) (_ int, err error)
 	DeleteLsifDataByUploadIds(ctx context.Context, bundleIDs ...int) (err error)
 	HardDeleteUploadsByIDs(ctx context.Context, ids ...int) error
-	HandleRawUpload(ctx context.Context, logger log.Logger, upload codeinteltypes.Upload, uploadStore uploadstore.Store, trace observation.TraceLogger) (requeued bool, err error)
+	HandleRawUpload(ctx context.Context, logger log.Logger, upload types.Upload, uploadStore uploadstore.Store, trace observation.TraceLogger) (requeued bool, err error)
 	HandleExpiredUploadsBatch(ctx context.Context, metrics *ExpirationMetrics, cfg ExpirerConfig) (err error)
 
 	// Commitgraph
@@ -52,7 +52,7 @@ type UploadService interface {
 	// Utils
 	FrontendReconcileCandidates(ctx context.Context, batchSize int) ([]int, error)
 	CodeIntelDBReconcileCandidates(ctx context.Context, batchSize int) ([]int, error)
-	GetDumpsByIDs(ctx context.Context, ids []int) ([]codeinteltypes.Dump, error)
+	GetDumpsByIDs(ctx context.Context, ids []int) ([]types.Dump, error)
 	IDsWithMeta(ctx context.Context, ids []int) ([]int, error)
 }
 

@@ -159,7 +159,7 @@ const requeueDelay = time.Minute
 // cloning or if the commit does not exist, then the upload will be requeued and this function returns a true
 // valued flag. Otherwise, the repo does not exist or there is an unexpected infrastructure error, which we'll
 // fail on.
-func requeueIfCloningOrCommitUnknown(ctx context.Context, logger log.Logger, repoStore RepoStore, workerStore dbworkerstore.Store, upload codeinteltypes.Upload, repo *types.Repo) (requeued bool, _ error) {
+func requeueIfCloningOrCommitUnknown(ctx context.Context, logger log.Logger, repoStore RepoStore, workerStore dbworkerstore.Store[codeinteltypes.Upload], upload codeinteltypes.Upload, repo *types.Repo) (requeued bool, _ error) {
 	_, err := repoStore.ResolveRev(ctx, repo, upload.Commit)
 	if err == nil {
 		// commit is resolvable

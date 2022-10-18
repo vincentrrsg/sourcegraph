@@ -1089,6 +1089,42 @@ func parseDirectoryChildren(dirnames, paths []string) map[string][]string {
 	return childrenMap
 }
 
+func (c *clientImplementor) LFSSmudge(ctx context.Context, repo api.RepoName, commit api.CommitID, path string, checker authz.SubRepoPermissionChecker) (_ io.ReadCloser, err error) {
+	span, ctx := ot.StartSpanFromContext(ctx, "Git: LFSSmudge")
+	defer func() {
+		if err != nil {
+			ext.Error.Set(span, true)
+			span.LogFields(log.Error(err))
+		}
+		span.Finish()
+	}()
+
+	// TODO should we transparently support this in both NewFileReader and
+	// ReadFile? I have concerns around other APIs being inconsistent (eg
+	// stats returning the wrong file sizes, needing to ensure anything that
+	// returns file contents uses smudge).
+
+	// First read in pointer. Pointer should be less than 200 bytes according
+	// to a few different implementations. Note: git-lfs implementation uses
+	// 1024, but we only support newer kind of pointers which are smaller.
+	r, err := c.NewFileReader(ctx, repo, commit, path, checker)
+	if err != nil {
+		return nil, err
+	}
+
+	var pointerArr [201]byte
+	n, err := io.ReadFull(r, pointerArr[:])
+	_ = r.Close()
+	if err == nil {
+		// TODO error type
+		return nil, errors.Errorf("%q in %s@%s is too big to be an LFS pointer", path, repo, commit)
+	} else if err != io.ErrUnexpectedEOF {
+		return nil, errors.Wrapf(err, "failed to read LFS pointer %q in %s@%s", path, repo, commit)
+	}
+
+	cmd := c.gitCommand(ctx, repo, "lfs", "smudge", path)
+}
+
 // ListTags returns a list of all tags in the repository. If commitObjs is non-empty, only all tags pointing at those commits are returned.
 func (c *clientImplementor) ListTags(ctx context.Context, repo api.RepoName, commitObjs ...string) ([]*gitdomain.Tag, error) {
 	span, ctx := ot.StartSpanFromContext(ctx, "Git: Tags")

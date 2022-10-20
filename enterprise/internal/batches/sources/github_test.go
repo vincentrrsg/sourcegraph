@@ -653,7 +653,20 @@ func TestGithubSource_GetUserFork(t *testing.T) {
 			},
 		} {
 			t.Run(name, func(t *testing.T) {
-				fork, err := githubGetUserFork(ctx, tc.targetRepo, tc.client, nil)
+
+				cf, _ := newClientFactory(t, name)
+
+				svc := &types.ExternalService{
+					Kind: extsvc.KindGitHub,
+					Config: extsvc.NewUnencryptedConfig(marshalJSON(t, &schema.GitHubConnection{
+						Url:   "https://github.com",
+						Token: os.Getenv("GITHUB_TOKEN"),
+					})),
+				}
+
+				githubSrc, err := NewGithubSource(ctx, svc, cf)
+
+				fork, err := githubSrc.GetUserFork(ctx, tc.targetRepo)
 				assert.Nil(t, fork)
 				assert.NotNil(t, err)
 			})
@@ -661,44 +674,31 @@ func TestGithubSource_GetUserFork(t *testing.T) {
 	})
 
 	t.Run("success", func(t *testing.T) {
-		org := "org"
 		remoteRepo := &github.Repository{NameWithOwner: "user/bar"}
-
-		for name, tc := range map[string]struct {
-			targetRepo *types.Repo
-			namespace  *string
-			client     githubClientFork
-		}{
-			"no namespace": {
-				targetRepo: &types.Repo{
-					Metadata: &github.Repository{
-						NameWithOwner: "foo/bar",
-					},
-				},
-				namespace: nil,
-				client:    &mockGithubClientFork{fork: remoteRepo},
+		targetRepo := &types.Repo{
+			Metadata: &github.Repository{
+				NameWithOwner: "foo/bar",
 			},
-			"with namespace": {
-				targetRepo: &types.Repo{
-					Metadata: &github.Repository{
-						NameWithOwner: "foo/bar",
-					},
-				},
-				namespace: &org,
-				client: &mockGithubClientFork{
-					fork:    remoteRepo,
-					wantOrg: &org,
-				},
-			},
-		} {
-			t.Run(name, func(t *testing.T) {
-				fork, err := githubGetUserFork(ctx, tc.targetRepo, tc.client, tc.namespace)
-				assert.Nil(t, err)
-				assert.NotNil(t, fork)
-				assert.NotEqual(t, fork, tc.targetRepo)
-				assert.Equal(t, remoteRepo, fork.Metadata)
-			})
 		}
+
+		cf, _ := newClientFactory(t, "with namespace")
+
+		svc := &types.ExternalService{
+			Kind: extsvc.KindGitHub,
+			Config: extsvc.NewUnencryptedConfig(marshalJSON(t, &schema.GitHubConnection{
+				Url:   "https://github.com",
+				Token: os.Getenv("GITHUB_TOKEN"),
+			})),
+		}
+
+		githubSrc, err := NewGithubSource(ctx, svc, cf)
+
+		fork, err := githubSrc.GetUserFork(ctx, targetRepo)
+		assert.Nil(t, err)
+		assert.NotNil(t, fork)
+		assert.NotEqual(t, fork, targetRepo)
+		assert.Equal(t, remoteRepo, fork.Metadata)
+		// TODO: assert repo.Sources has fork URLs
 	})
 }
 

@@ -524,6 +524,11 @@
           "type": "boolean",
           "default": false
         },
+        "enableGitLFS": {
+          "description": "Enable support for git-lfs.",
+          "type": "boolean",
+          "default": false
+        },
         "enableGitServerCommandExecFilter": {
           "description": "DEPRECATED: Setting any value to this flag has no effect.",
           "type": "boolean",

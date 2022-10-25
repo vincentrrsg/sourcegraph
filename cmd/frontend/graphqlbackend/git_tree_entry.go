@@ -3,6 +3,7 @@ package graphqlbackend
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"io/fs"
 	"net/url"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/internal/cloneurls"
 	autoindexinggraphql "github.com/sourcegraph/sourcegraph/internal/codeintel/autoindexing/transport/graphql"
 	codenavgraphql "github.com/sourcegraph/sourcegraph/internal/codeintel/codenav/transport/graphql"
+	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/gitdomain"
@@ -79,6 +81,11 @@ func (r *GitTreeEntryResolver) Content(ctx context.Context) (string, error) {
 		ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 
+		if f := conf.Get().ExperimentalFeatures; f != nil && f.EnableGitLFS {
+			r.content, r.contentErr = r.lfsSmudge(ctx)
+			return
+		}
+
 		r.content, r.contentErr = r.gitserverClient.ReadFile(
 			ctx,
 			r.commit.repoResolver.RepoName(),
@@ -89,6 +96,22 @@ func (r *GitTreeEntryResolver) Content(ctx context.Context) (string, error) {
 	})
 
 	return string(r.content), r.contentErr
+}
+
+func (r *GitTreeEntryResolver) lfsSmudge(ctx context.Context) ([]byte, error) {
+	rc, err := r.gitserverClient.LFSSmudge(
+		ctx,
+		r.commit.repoResolver.RepoName(),
+		api.CommitID(r.commit.OID()),
+		r.Path(),
+		authz.DefaultSubRepoPermsChecker,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+
+	return io.ReadAll(rc)
 }
 
 func (r *GitTreeEntryResolver) RichHTML(ctx context.Context) (string, error) {

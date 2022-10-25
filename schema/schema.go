@@ -615,6 +615,8 @@ type ExperimentalFeatures struct {
 	CustomGitFetch []*CustomGitFetchMapping `json:"customGitFetch,omitempty"`
 	// DebugLog description: Turns on debug logging for specific debugging scenarios.
 	DebugLog *DebugLog `json:"debug.log,omitempty"`
+	// EnableGitLFS description: Enable support for git-lfs.
+	EnableGitLFS bool `json:"enableGitLFS,omitempty"`
 	// EnableGitServerCommandExecFilter description: DEPRECATED: Setting any value to this flag has no effect.
 	EnableGitServerCommandExecFilter bool `json:"enableGitServerCommandExecFilter,omitempty"`
 	// EnableGithubInternalRepoVisibility description: Enable support for visilibity of internal Github repositories

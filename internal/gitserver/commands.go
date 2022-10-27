@@ -1119,8 +1119,28 @@ func (c *clientImplementor) LFSSmudge(ctx context.Context, repo api.RepoName, co
 			Reader: io.MultiReader(bytes.NewReader(pointer), r),
 			Closer: r,
 		}, nil
-	} else if err != io.ErrUnexpectedEOF {
+	}
+
+	// We are done reading from r, best effort closing.
+	_ = r.Close()
+
+	if err != io.ErrUnexpectedEOF {
 		return nil, errors.Wrapf(err, "failed to read LFS pointer %q in %s@%s", path, repo, commit)
+	}
+
+	if !isLFSPointer(pointer) {
+		return io.NopCloser(bytes.NewReader(pointer)), nil
+	}
+
+	// Ensure the file is fetched before running smudge since exec does not
+	// have access to auth/remote URLs.
+	err = c.lfsFetch(ctx, &protocol.LFSFetchRequest{
+		Repo:   protocol.NormalizeRepo(repo),
+		CommitID: commit,
+		Path:   path,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	cmd := c.gitCommand(repo, "lfs", "smudge", path)
@@ -1129,9 +1149,28 @@ func (c *clientImplementor) LFSSmudge(ctx context.Context, repo api.RepoName, co
 	return cmd.StdoutReader(ctx)
 }
 
+func (c *clientImplementor) lfsFetch(ctx context.Context, req *protocol.LFSFetchRequest) error {
+	resp, err := c.httpPost(ctx, req.Repo, "lfs-fetch", req)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(io.Discard, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return resp.Body.Close()
+}
+
 type withCloser struct {
 	io.Reader
 	io.Closer
+}
+
+func isLFSPointer([]byte) bool {
+	// TODO implement
+	return true
 }
 
 // ListTags returns a list of all tags in the repository. If commitObjs is non-empty, only all tags pointing at those commits are returned.

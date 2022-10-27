@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/opentracing/opentracing-go/log"
+	otlog "github.com/opentracing/opentracing-go/log"
+	"github.com/sourcegraph/log"
 
 	"github.com/sourcegraph/sourcegraph/internal/api"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/gitdomain"
@@ -111,10 +112,10 @@ type BatchLogRequest struct {
 	Format string `json:"format"`
 }
 
-func (req BatchLogRequest) LogFields() []log.Field {
-	return []log.Field{
-		log.Int("numRepoCommits", len(req.RepoCommits)),
-		log.String("format", req.Format),
+func (req BatchLogRequest) LogFields() []otlog.Field {
+	return []otlog.Field{
+		otlog.Int("numRepoCommits", len(req.RepoCommits)),
+		otlog.String("format", req.Format),
 	}
 }
 
@@ -128,6 +129,21 @@ type BatchLogResult struct {
 	RepoCommit    api.RepoCommit `json:"repoCommit"`
 	CommandOutput string         `json:"output"`
 	CommandError  string         `json:"error,omitempty"`
+}
+
+// LFSFetchRequest is a request to fetch the file pointed at by Path.
+type LFSFetchRequest struct {
+	Repo     api.RepoName `json:"repo"`
+	CommitID api.CommitID `json:"commitID"`
+	Path     string       `json:"path"`
+}
+
+func (req *LFSFetchRequest) LogFields() []log.Field {
+	return []log.Field{
+		log.String("repo", string(req.Repo)),
+		log.String("commitID", string(req.CommitID)),
+		log.String("path", req.Path),
+	}
 }
 
 // P4ExecRequest is a request to execute a p4 command with given arguments.

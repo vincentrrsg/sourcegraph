@@ -479,6 +479,11 @@ func (s *Server) Handler() http.Handler {
 		conf.DefaultClient(),
 		s.handleExec,
 	)))
+	mux.HandleFunc("/lfs-fetch", trace.WithRouteName("lfs-fetch", accesslog.HTTPMiddleware(
+		s.Logger.Scoped("exec.accesslog", "exec endpoint access log"),
+		conf.DefaultClient(),
+		s.handleExec,
+	)))
 	mux.HandleFunc("/search", trace.WithRouteName("search", s.handleSearch))
 	mux.HandleFunc("/batch-log", trace.WithRouteName("batch-log", s.handleBatchLog))
 	mux.HandleFunc("/p4-exec", trace.WithRouteName("p4-exec", accesslog.HTTPMiddleware(

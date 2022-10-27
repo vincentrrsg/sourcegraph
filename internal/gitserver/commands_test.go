@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -2837,6 +2839,12 @@ func TestLFSSmudge(t *testing.T) {
 		ResetClientMocks()
 	})
 
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		t.Log(string(b))
+	}))
+	t.Cleanup(ts.Close)
+
 	files := map[string]string{
 		"in-lfs.txt":       "I am in LFS\n",
 		"in-git-small.txt": "I am small and in git\n",
@@ -2858,7 +2866,7 @@ func TestLFSSmudge(t *testing.T) {
 	// seems to work under the assumption of a working copy.
 	repo := MakeBareGitRepository(t, gitCmds...)
 
-	c := NewClient(database.NewMockDB())
+	c := NewTestClient(http.DefaultClient, database.NewMockDB(), []string{ts.Listener.Addr().String()})
 	head, err := c.ResolveRevision(ctx, repo, "HEAD", ResolveRevisionOptions{})
 	if err != nil {
 		t.Fatal(err)

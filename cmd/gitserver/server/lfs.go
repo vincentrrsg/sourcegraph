@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -57,7 +58,12 @@ func (s *Server) lfsFetch(w http.ResponseWriter, r *http.Request, req *protocol.
 
 	start := time.Now()
 	output, err := runWith(ctx, cmd, true, nil)
-	logger.Info("ran lfs fetch", log.String("output", string(output)), log.Duration("duration", time.Since(start)), log.Error(err))
+	logger.Info("ran lfs fetch", log.String("output", string(output)), log.Duration("duration", time.Since(start)), log.Error(err), log.Strings("args", cmd.Args))
+
+	cmd = exec.CommandContext(ctx, "git", "lfs", "env", remoteURL.String())
+	dir.Set(cmd)
+	output, _ = runWith(ctx, cmd, true, nil)
+	os.Stdout.Write(output)
 
 	return nil
 }

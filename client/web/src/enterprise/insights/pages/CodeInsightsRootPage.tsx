@@ -22,7 +22,7 @@ import {
 
 import { CodeInsightsIcon } from '../../../insights/Icons'
 import { CodeInsightsPage } from '../components'
-import { ALL_INSIGHTS_DASHBOARD } from '../core'
+import { ALL_INSIGHTS_DASHBOARD } from '../constants'
 
 import { DashboardsContentPage } from './dashboards/dashboard-page/DashboardsContentPage'
 
@@ -95,7 +95,7 @@ export const CodeInsightsRootPage: React.FunctionComponent<
                             to="/insights/add-dashboard"
                             variant="secondary"
                             className="mr-2"
-                            data-testid="add-dashboard-button"
+                            aria-label="Add dashboard"
                         >
                             <Icon aria-hidden={true} svgPath={mdiPlus} /> Add dashboard
                         </Button>
@@ -115,7 +115,6 @@ export const CodeInsightsRootPage: React.FunctionComponent<
             <Tabs index={activeView} size="medium" className="mb-3" onChange={handleTabNavigationChange} lazy={true}>
                 <TabList>
                     <Tab index={CodeInsightsRootPageTab.CodeInsights}>Code Insights</Tab>
-
                     <Tab index={CodeInsightsRootPageTab.GettingStarted}>Getting started</Tab>
                 </TabList>
                 <TabPanels className="mt-3">

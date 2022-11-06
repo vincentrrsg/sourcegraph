@@ -1,14 +1,14 @@
 import { encodeURIPathComponent } from '@sourcegraph/common'
+import { JsonDocument } from '@sourcegraph/shared/src/codeintel/scip'
 import { TreeEntriesResult } from '@sourcegraph/shared/src/graphql-operations'
 
 import {
     BlobResult,
-    FileExternalLinksResult,
-    RepositoryRedirectResult,
-    ResolveRevResult,
     ExternalServiceKind,
-    RepoChangesetsStatsResult,
+    FileExternalLinksResult,
     FileNamesResult,
+    RepoChangesetsStatsResult,
+    ResolveRepoRevResult,
 } from '../graphql-operations'
 
 export const createTreeEntriesResult = (url: string, toplevelFiles: string[]): TreeEntriesResult => ({
@@ -32,7 +32,8 @@ export const createTreeEntriesResult = (url: string, toplevelFiles: string[]): T
 
 export const createBlobContentResult = (
     content: string,
-    html: string = `<div style="color:red">${content}<div>`
+    html: string = `<div style="color:red">${content}<div>`,
+    lsif?: JsonDocument
 ): BlobResult => ({
     repository: {
         commit: {
@@ -42,7 +43,7 @@ export const createBlobContentResult = (
                 highlight: {
                     aborted: false,
                     html,
-                    lsif: '',
+                    lsif: lsif ? JSON.stringify(lsif) : '',
                 },
             },
         },
@@ -62,22 +63,6 @@ export const createFileExternalLinksResult = (
     },
 })
 
-export const createRepositoryRedirectResult = (
-    repoName: string,
-    serviceKind: ExternalServiceKind = ExternalServiceKind.GITHUB
-): RepositoryRedirectResult => ({
-    repositoryRedirect: {
-        __typename: 'Repository',
-        id: `RepositoryID:${repoName}`,
-        name: repoName,
-        url: `/${encodeURIPathComponent(repoName)}`,
-        externalURLs: [{ url: new URL(`https://${encodeURIPathComponent(repoName)}`).href, serviceKind }],
-        description: 'bla',
-        viewerCanAdminister: false,
-        defaultBranch: { displayName: 'master', abbrevName: 'master' },
-    },
-})
-
 export const createRepoChangesetsStatsResult = (): RepoChangesetsStatsResult => ({
     repository: {
         changesetsStats: {
@@ -87,16 +72,60 @@ export const createRepoChangesetsStatsResult = (): RepoChangesetsStatsResult => 
     },
 })
 
-export const createResolveRevisionResult = (treeUrl: string, oid = '1'.repeat(40)): ResolveRevResult => ({
+export const createResolveRepoRevisionResult = (treeUrl: string, oid = '1'.repeat(40)): ResolveRepoRevResult => ({
     repositoryRedirect: {
         __typename: 'Repository',
+        id: `RepositoryID:${treeUrl}`,
+        name: treeUrl,
+        url: `/${encodeURIPathComponent(treeUrl)}`,
+        externalURLs: [
+            {
+                url: new URL(`https://${encodeURIPathComponent(treeUrl)}`).href,
+                serviceKind: ExternalServiceKind.GITHUB,
+            },
+        ],
+        externalRepository: { serviceType: 'github', serviceID: 'https://github.com/' },
+        description: 'bla',
+        viewerCanAdminister: false,
+        defaultBranch: { displayName: 'master', abbrevName: 'master' },
         mirrorInfo: { cloneInProgress: false, cloneProgress: '', cloned: true },
         commit: {
             oid,
             tree: { url: '/' + treeUrl },
         },
-        defaultBranch: { abbrevName: 'master' },
     },
+})
+
+export const createResolveCloningRepoRevisionResult = (
+    treeUrl: string
+): ResolveRepoRevResult & { errors: { message: string }[] } => ({
+    repositoryRedirect: {
+        __typename: 'Repository',
+        id: `RepositoryID:${treeUrl}`,
+        name: treeUrl,
+        url: `/${encodeURIPathComponent(treeUrl)}`,
+        externalURLs: [
+            {
+                url: new URL(`https://${encodeURIPathComponent(treeUrl)}`).href,
+                serviceKind: ExternalServiceKind.GITHUB,
+            },
+        ],
+        externalRepository: { serviceType: 'github', serviceID: 'https://github.com/' },
+        description: 'bla',
+        viewerCanAdminister: false,
+        defaultBranch: null,
+        mirrorInfo: {
+            cloneInProgress: true,
+            cloneProgress: 'starting clone',
+            cloned: false,
+        },
+        commit: null,
+    },
+    errors: [
+        {
+            message: `repository does not exist (clone in progress): ${treeUrl}`,
+        },
+    ],
 })
 
 export const createFileNamesResult = (): FileNamesResult => ({

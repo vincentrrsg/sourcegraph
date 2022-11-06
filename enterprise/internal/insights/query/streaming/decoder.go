@@ -7,8 +7,10 @@ import (
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/compute"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/compute/client"
 
+	"github.com/sourcegraph/sourcegraph/internal/api"
 	streamapi "github.com/sourcegraph/sourcegraph/internal/search/streaming/api"
 	streamhttp "github.com/sourcegraph/sourcegraph/internal/search/streaming/http"
+	itypes "github.com/sourcegraph/sourcegraph/internal/types"
 )
 
 type StreamDecoderEvents struct {
@@ -21,14 +23,17 @@ type SearchMatch struct {
 	RepositoryID   int32
 	RepositoryName string
 	MatchCount     int
-	LineMatches    []streamhttp.EventLineMatch
-	Path           string
 }
 
 type TabulationResult struct {
 	StreamDecoderEvents
 	RepoCounts map[string]*SearchMatch
 	TotalCount int
+}
+
+type SelectRepoResult struct {
+	StreamDecoderEvents
+	Repos []itypes.MinimalRepo
 }
 
 // TabulationDecoder will tabulate the result counts per repository.
@@ -106,63 +111,6 @@ func TabulationDecoder() (streamhttp.FrontendStreamDecoder, *TabulationResult) {
 			tr.Errors = append(tr.Errors, eventError.Message)
 		},
 	}, tr
-}
-
-// MetadataResult contains information about matches like line matches, paths.
-type MetadataResult struct {
-	StreamDecoderEvents
-	Matches []*SearchMatch
-}
-
-// MetadataDecoder will tabulate metadata for a query. This is to return useful information for
-// related insights.
-func MetadataDecoder() (streamhttp.FrontendStreamDecoder, *MetadataResult) {
-	mr := &MetadataResult{}
-
-	return streamhttp.FrontendStreamDecoder{
-		OnMatches: func(matches []streamhttp.EventMatch) {
-			for _, match := range matches {
-				switch match := match.(type) {
-				// Right now we only care about inline matches.
-				// Should be extended when we care about repo and file results.
-				case *streamhttp.EventContentMatch:
-					mr.Matches = append(mr.Matches, &SearchMatch{LineMatches: match.LineMatches})
-				case *streamhttp.EventPathMatch:
-					mr.Matches = append(mr.Matches, &SearchMatch{Path: match.Path})
-				case *streamhttp.EventRepoMatch:
-					mr.Matches = append(mr.Matches, &SearchMatch{RepositoryName: match.Repository})
-				}
-			}
-		},
-		OnProgress: func(progress *streamapi.Progress) {
-			if !progress.Done {
-				return
-			}
-			// Skipped elements are built progressively for a Progress update until it is Done, so
-			// we want to register its contents only once it is done.
-			for _, skipped := range progress.Skipped {
-				// ShardTimeout is a specific skipped event that we want to retry on. Currently
-				// we only retry on Alert events so this is why we add it there. This behaviour will
-				// be uniformised eventually.
-				if skipped.Reason == streamapi.ShardTimeout {
-					mr.Alerts = append(mr.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-				} else {
-					mr.SkippedReasons = append(mr.SkippedReasons, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-				}
-			}
-		},
-		OnAlert: func(ea *streamhttp.EventAlert) {
-			if ea.Title == "No repositories found" {
-				// If we hit a case where we don't find a repository we don't want to error, just
-				// complete our search.
-			} else {
-				mr.Alerts = append(mr.Alerts, fmt.Sprintf("%s: %s", ea.Title, ea.Description))
-			}
-		},
-		OnError: func(eventError *streamhttp.EventError) {
-			mr.Errors = append(mr.Errors, eventError.Message)
-		},
-	}, mr
 }
 
 // ComputeMatch is our internal representation of a match retrieved from a Compute Streaming Search.
@@ -312,4 +260,49 @@ func ComputeTextDecoder() (client.ComputeTextExtraStreamDecoder, *ComputeTabulat
 			ctr.Errors = append(ctr.Errors, eventError.Message)
 		},
 	}, ctr
+}
+
+func SelectRepoDecoder() (streamhttp.FrontendStreamDecoder, *SelectRepoResult) {
+	repoResult := &SelectRepoResult{
+		Repos: []itypes.MinimalRepo{},
+	}
+
+	return streamhttp.FrontendStreamDecoder{
+		OnProgress: func(progress *streamapi.Progress) {
+			if !progress.Done {
+				return
+			}
+			// Skipped elements are built progressively for a Progress update until it is Done, so
+			// we want to register its contents only once it is done.
+			for _, skipped := range progress.Skipped {
+				// ShardTimeout is a specific skipped event that we want to retry on. Currently
+				// we only retry on Alert events so this is why we add it there. This behaviour will
+				// be uniformised eventually.
+				if skipped.Reason == streamapi.ShardTimeout {
+					repoResult.Alerts = append(repoResult.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
+				} else {
+					repoResult.SkippedReasons = append(repoResult.SkippedReasons, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
+				}
+			}
+		},
+		OnMatches: func(matches []streamhttp.EventMatch) {
+			for _, match := range matches {
+				switch match := match.(type) {
+				case *streamhttp.EventRepoMatch:
+					repoResult.Repos = append(repoResult.Repos, itypes.MinimalRepo{ID: api.RepoID(match.RepositoryID), Name: api.RepoName(match.Repository)})
+				}
+			}
+		},
+		OnAlert: func(ea *streamhttp.EventAlert) {
+			if ea.Title == "No repositories found" {
+				// If we hit a case where we don't find a repository we don't want to error, just
+				// complete our search.
+			} else {
+				repoResult.Alerts = append(repoResult.Alerts, fmt.Sprintf("%s: %s", ea.Title, ea.Description))
+			}
+		},
+		OnError: func(eventError *streamhttp.EventError) {
+			repoResult.Errors = append(repoResult.Errors, eventError.Message)
+		},
+	}, repoResult
 }

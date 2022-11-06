@@ -15,7 +15,7 @@ import {
 } from 'rxjs/operators'
 import { FileDecoration } from 'sourcegraph'
 
-import { asError, ErrorLike, isErrorLike } from '@sourcegraph/common'
+import { asError, ErrorLike, isErrorLike, logger } from '@sourcegraph/common'
 import { FileDecorationsByPath } from '@sourcegraph/shared/src/api/extension/extensionHostApi'
 import { fetchTreeEntries } from '@sourcegraph/shared/src/backend/repo'
 import { Scalars, TreeFields } from '@sourcegraph/shared/src/graphql-operations'
@@ -44,6 +44,7 @@ export interface TreeLayerProps extends Omit<TreeRootProps, 'sizeKey'> {
     fileDecorations?: FileDecoration[]
     onHover: (filePath: string) => void
     repoID: Scalars['ID']
+    enableMergedFileSymbolSidebar: boolean
 }
 
 const LOADING = 'loading' as const
@@ -103,7 +104,7 @@ export class TreeLayer extends React.Component<TreeLayerProps, TreeLayerState> {
                     // clear file decorations before latest file decorations come
                     this.setState({ treeOrError, fileDecorationsByPath: {} })
                 },
-                error => console.error(error)
+                error => logger.error(error)
             )
         )
 
@@ -309,6 +310,9 @@ export class TreeLayer extends React.Component<TreeLayerProps, TreeLayerState> {
                                                         childrenEntries={singleChildTreeEntry.children}
                                                         setChildNodes={this.setChildNode}
                                                         fileDecorationsByPath={this.state.fileDecorationsByPath}
+                                                        enableMergedFileSymbolSidebar={
+                                                            this.props.enableMergedFileSymbolSidebar
+                                                        }
                                                     />
                                                 )
                                             )}
@@ -328,9 +332,7 @@ export class TreeLayer extends React.Component<TreeLayerProps, TreeLayerState> {
                                 linkRowClick={this.linkRowClick}
                                 isActive={isActive}
                                 isSelected={isSelected}
-                                repoID={this.props.repoID}
-                                revision={this.props.revision}
-                                location={this.props.location}
+                                enableMergedFileSymbolSidebar={this.props.enableMergedFileSymbolSidebar}
                             />
                         )}
                     </tbody>

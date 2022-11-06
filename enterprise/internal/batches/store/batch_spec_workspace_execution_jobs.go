@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/keegancsmith/sqlf"
 	"github.com/lib/pq"
@@ -72,7 +71,6 @@ FROM batch_spec_workspace_execution_queue
 `
 
 const createBatchSpecWorkspaceExecutionJobsQueryFmtstr = `
--- source: enterprise/internal/batches/store/batch_spec_workspace_execution_jobs.go:CreateBatchSpecWorkspaceExecutionJobs
 INSERT INTO
 	batch_spec_workspace_execution_jobs (batch_spec_workspace_id, user_id)
 SELECT
@@ -112,7 +110,6 @@ func (s *Store) CreateBatchSpecWorkspaceExecutionJobs(ctx context.Context, batch
 }
 
 const createBatchSpecWorkspaceExecutionJobsForWorkspacesQueryFmtstr = `
--- source: enterprise/internal/batches/store/batch_spec_workspace_execution_jobs.go:CreateBatchSpecWorkspaceExecutionJobsForWorkspaces
 INSERT INTO
 	batch_spec_workspace_execution_jobs (batch_spec_workspace_id, user_id)
 SELECT
@@ -142,7 +139,6 @@ type DeleteBatchSpecWorkspaceExecutionJobsOpts struct {
 }
 
 const deleteBatchSpecWorkspaceExecutionJobsQueryFmtstr = `
--- source: enterprise/internal/batches/store/batch_spec_workspace_execution_jobs.go:DeleteBatchSpecWorkspaceExecutionJobs
 DELETE FROM
 	batch_spec_workspace_execution_jobs
 WHERE
@@ -225,7 +221,6 @@ func (s *Store) GetBatchSpecWorkspaceExecutionJob(ctx context.Context, opts GetB
 }
 
 var getBatchSpecWorkspaceExecutionJobsQueryFmtstr = `
--- source: enterprise/internal/batches/store/batch_spec_workspace_execution_jobs.go:GetBatchSpecWorkspaceExecutionJob
 SELECT
 	%s
 FROM
@@ -305,7 +300,6 @@ func (s *Store) ListBatchSpecWorkspaceExecutionJobs(ctx context.Context, opts Li
 }
 
 var listBatchSpecWorkspaceExecutionJobsQueryFmtstr = `
--- source: enterprise/internal/batches/store/batch_spec_workspace_execution_jobs.go:ListBatchSpecWorkspaceExecutionJobs
 SELECT
 	%s
 FROM
@@ -410,7 +404,6 @@ func (s *Store) CancelBatchSpecWorkspaceExecutionJobs(ctx context.Context, opts 
 }
 
 var cancelBatchSpecWorkspaceExecutionJobsQueryFmtstr = `
--- source: enterprise/internal/batches/store/batch_spec_workspace_execution_jobs.go:CancelBatchSpecWorkspaceExecutionJobs
 WITH candidates AS (
 	SELECT
 		batch_spec_workspace_execution_jobs.id
@@ -508,29 +501,4 @@ func ScanBatchSpecWorkspaceExecutionJob(wj *btypes.BatchSpecWorkspaceExecutionJo
 	}
 
 	return nil
-}
-
-func scanFirstBatchSpecWorkspaceExecutionJob(rows *sql.Rows, err error) (*btypes.BatchSpecWorkspaceExecutionJob, bool, error) {
-	jobs, err := scanBatchSpecWorkspaceExecutionJobs(rows, err)
-	if err != nil || len(jobs) == 0 {
-		return nil, false, err
-	}
-	return jobs[0], true, nil
-}
-
-func scanBatchSpecWorkspaceExecutionJobs(rows *sql.Rows, queryErr error) ([]*btypes.BatchSpecWorkspaceExecutionJob, error) {
-	if queryErr != nil {
-		return nil, queryErr
-	}
-
-	var jobs []*btypes.BatchSpecWorkspaceExecutionJob
-
-	return jobs, scanAll(rows, func(sc dbutil.Scanner) (err error) {
-		var j btypes.BatchSpecWorkspaceExecutionJob
-		if err = ScanBatchSpecWorkspaceExecutionJob(&j, sc); err != nil {
-			return err
-		}
-		jobs = append(jobs, &j)
-		return nil
-	})
 }

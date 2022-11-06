@@ -6,6 +6,7 @@ import (
 	"github.com/graph-gophers/graphql-go"
 
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/graphqlbackend/graphqlutil"
+	"github.com/sourcegraph/sourcegraph/internal/gqlutil"
 )
 
 // This file just contains stub GraphQL resolvers and data types for Code Insights which merely
@@ -15,18 +16,11 @@ import (
 // InsightsResolver is the root resolver.
 type InsightsResolver interface {
 	// Queries
-	Insights(ctx context.Context, args *InsightsArgs) (InsightConnectionResolver, error)
 	InsightsDashboards(ctx context.Context, args *InsightsDashboardsArgs) (InsightsDashboardConnectionResolver, error)
 	InsightViews(ctx context.Context, args *InsightViewQueryArgs) (InsightViewConnectionResolver, error)
 
 	SearchInsightLivePreview(ctx context.Context, args SearchInsightLivePreviewArgs) ([]SearchInsightLivePreviewSeriesResolver, error)
 	SearchInsightPreview(ctx context.Context, args SearchInsightPreviewArgs) ([]SearchInsightLivePreviewSeriesResolver, error)
-
-	RelatedInsightsInline(ctx context.Context, args RelatedInsightsArgs) ([]RelatedInsightsInlineResolver, error)
-	RelatedInsightsForFile(ctx context.Context, args RelatedInsightsArgs) ([]RelatedInsightsResolver, error)
-	RelatedInsightsForRepo(ctx context.Context, args RelatedInsightsRepoArgs) ([]RelatedInsightsResolver, error)
-
-	SearchQueryInsights(ctx context.Context, args SearchQueryInsightsArgs) (SearchQueryInsightsResult, error)
 
 	// Mutations
 	CreateInsightsDashboard(ctx context.Context, args *CreateInsightsDashboardArgs) (InsightsDashboardPayloadResolver, error)
@@ -82,21 +76,22 @@ type InsightsArgs struct {
 }
 
 type InsightsDataPointResolver interface {
-	DateTime() DateTime
+	DateTime() gqlutil.DateTime
 	Value() float64
 }
 
 type InsightStatusResolver interface {
-	TotalPoints() int32
-	PendingJobs() int32
-	CompletedJobs() int32
-	FailedJobs() int32
-	BackfillQueuedAt() *DateTime
+	TotalPoints(context.Context) (int32, error)
+	PendingJobs(context.Context) (int32, error)
+	CompletedJobs(context.Context) (int32, error)
+	FailedJobs(context.Context) (int32, error)
+	BackfillQueuedAt(context.Context) *gqlutil.DateTime
+	IsLoadingData(context.Context) (*bool, error)
 }
 
 type InsightsPointsArgs struct {
-	From             *DateTime
-	To               *DateTime
+	From             *gqlutil.DateTime
+	To               *gqlutil.DateTime
 	IncludeRepoRegex *string
 	ExcludeRepoRegex *string
 }
@@ -124,7 +119,7 @@ type InsightConnectionResolver interface {
 
 type InsightDirtyQueryResolver interface {
 	Reason(ctx context.Context) string
-	Time(ctx context.Context) DateTime
+	Time(ctx context.Context) gqlutil.DateTime
 	Count(ctx context.Context) int32
 }
 
@@ -203,7 +198,7 @@ type InsightViewResolver interface {
 	DefaultSeriesDisplayOptions(ctx context.Context) (InsightViewSeriesDisplayOptionsResolver, error)
 	AppliedSeriesDisplayOptions(ctx context.Context) (InsightViewSeriesDisplayOptionsResolver, error)
 	Dashboards(ctx context.Context, args *InsightsDashboardsArgs) InsightsDashboardConnectionResolver
-	SeriesCount(ctx context.Context) (int32, error)
+	SeriesCount(ctx context.Context) (*int32, error)
 }
 
 type InsightDataSeriesDefinition interface {
@@ -454,53 +449,4 @@ type DeleteInsightViewArgs struct {
 type SearchInsightLivePreviewSeriesResolver interface {
 	Points(ctx context.Context) ([]InsightsDataPointResolver, error)
 	Label(ctx context.Context) (string, error)
-}
-
-type RelatedInsightsArgs struct {
-	Input RelatedInsightsInput
-}
-
-type RelatedInsightsInput struct {
-	Repo     string
-	File     string
-	Revision string
-}
-
-type RelatedInsightsRepoArgs struct {
-	Input RelatedInsightsRepoInput
-}
-
-type RelatedInsightsRepoInput struct {
-	Repo     string
-	Revision string
-}
-
-type RelatedInsightsInlineResolver interface {
-	ViewID() string
-	Title() string
-	LineNumbers() []int32
-}
-
-type RelatedInsightsResolver interface {
-	ViewID() string
-	Title() string
-}
-
-type SearchQueryInsightsResolver interface {
-	ThirtyDayPercentChange(ctx context.Context) (int32, error)
-	Preview(ctx context.Context) ([]SearchInsightLivePreviewSeriesResolver, error)
-}
-
-type SearchQueryInsightsNotAvailable interface {
-	Message(ctx context.Context) string
-}
-
-type SearchQueryInsightsArgs struct {
-	Query       string `json:"query"`
-	PatternType string `json:"patternType"`
-}
-
-type SearchQueryInsightsResult interface {
-	ToSearchQueryInsights() (SearchQueryInsightsResolver, bool)
-	ToSearchQueryInsightsNotAvailable() (SearchQueryInsightsNotAvailable, bool)
 }

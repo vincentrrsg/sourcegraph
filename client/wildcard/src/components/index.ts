@@ -3,6 +3,7 @@ export { Button, ButtonGroup, BUTTON_SIZES } from './Button'
 export type { ButtonGroupProps } from './Button'
 export { Alert, AlertLink } from './Alert'
 export { Container } from './Container'
+export { LineChart, BarChart, PieChart, LegendList, LegendItem, ScrollBox, ParentSize } from './Charts'
 export {
     Checkbox,
     FlexTextArea,
@@ -42,8 +43,20 @@ export {
     PopoverOpenEventReason,
     EMPTY_RECTANGLE,
     createRectangle,
+    usePopoverContext,
+    Flipping,
+    Strategy,
 } from './Popover'
 export { Collapse, CollapseHeader, CollapsePanel } from './Collapse'
+export {
+    Combobox,
+    ComboboxInput,
+    ComboboxPopover,
+    ComboboxList,
+    ComboboxOptionGroup,
+    ComboboxOption,
+    ComboboxOptionText,
+} from './Combobox'
 
 /**
  * Type Exports
@@ -54,13 +67,21 @@ export type { AlertProps, AlertLinkProps } from './Alert'
 export type { MultiSelectProps, MultiSelectOption, MultiSelectState, SelectProps, InputProps } from './Form'
 export type { ButtonProps } from './Button'
 export type { ButtonLinkProps } from './ButtonLink'
+export type { Series, SeriesLikeChart, CategoricalLikeChart, LineChartProps, BarChartProps } from './Charts'
 export type { LinkProps } from './Link'
 export type { PopoverOpenEvent, Rectangle } from './Popover'
 export type { MenuLinkProps, MenuItemProps } from './Menu'
-export type { TabsProps } from './Tabs'
+export type { TabsProps, TabListProps, TabProps, TabPanelProps, TabPanelsProps } from './Tabs'
 export type { IconProps, IconType } from './Icon'
 export type { Point } from './Popover'
 export type { TooltipProps } from './Tooltip'
 export type { HeadingProps, HeadingElement } from './Typography'
 export type { BadgeProps, BadgeVariantType, ProductStatusType, BaseProductStatusBadgeProps } from './Badge'
 export type { ModalProps } from './Modal'
+
+/**
+ * Class name helpers to be used with plain DOM nodes.
+ * NOTE: Prefer using the React components is possible.
+ */
+export { getButtonClassName } from './Button/utils'
+export { getLabelClassName } from './Typography/Label/utils'

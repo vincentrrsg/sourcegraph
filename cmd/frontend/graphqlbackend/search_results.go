@@ -85,11 +85,12 @@ func (c *SearchResultsResolver) repositoryResolvers(ctx context.Context, ids []a
 		return nil, nil
 	}
 
+	gsClient := gitserver.NewClient(c.db)
 	resolvers := make([]*RepositoryResolver, 0, len(ids))
 	err := c.db.Repos().StreamMinimalRepos(ctx, database.ReposListOptions{
 		IDs: ids,
 	}, func(repo *types.MinimalRepo) {
-		resolvers = append(resolvers, NewRepositoryResolver(c.db, repo.ToRepo()))
+		resolvers = append(resolvers, NewRepositoryResolver(c.db, gsClient, repo.ToRepo()))
 	})
 	if err != nil {
 		return nil, err
@@ -139,11 +140,12 @@ func matchesToResolvers(db database.DB, matches []result.Match) []SearchResultRe
 		Rev  string
 	}
 	repoResolvers := make(map[repoKey]*RepositoryResolver, 10)
+	gsClient := gitserver.NewClient(db)
 	getRepoResolver := func(repoName types.MinimalRepo, rev string) *RepositoryResolver {
 		if existing, ok := repoResolvers[repoKey{repoName, rev}]; ok {
 			return existing
 		}
-		resolver := NewRepositoryResolver(db, repoName.ToRepo())
+		resolver := NewRepositoryResolver(db, gsClient, repoName.ToRepo())
 		resolver.RepoMatch.Rev = rev
 		repoResolvers[repoKey{repoName, rev}] = resolver
 		return resolver
@@ -335,8 +337,9 @@ loop:
 			panic("SearchResults.Sparkline unexpected union type state")
 		}
 	}
-	span := opentracing.SpanFromContext(ctx)
-	span.SetTag("blame_ops", blameOps)
+	if span := opentracing.SpanFromContext(ctx); span != nil {
+		span.SetTag("blame_ops", blameOps)
+	}
 	return sparkline, nil
 }
 
@@ -577,6 +580,7 @@ func (r *searchResolver) Stats(ctx context.Context) (stats *searchResultsStats, 
 		if err := json.Unmarshal(jsonRes, &stats); err != nil {
 			return nil, err
 		}
+		stats.logger = r.logger.Scoped("searchResultsStats", "provides status on search results")
 		stats.sr = r
 		return stats, nil
 	}
@@ -636,6 +640,7 @@ func (r *searchResolver) Stats(ctx context.Context) (stats *searchResultsStats, 
 		return nil, err // sparkline generation failed, so don't cache.
 	}
 	stats = &searchResultsStats{
+		logger:                  r.logger.Scoped("searchResultsStats", "provides status on search results"),
 		JApproximateResultCount: v.ApproximateResultCount(),
 		JSparkline:              sparkline,
 		sr:                      r,

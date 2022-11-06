@@ -1,7 +1,6 @@
 import React from 'react'
 
 import { mdiDotsVertical } from '@mdi/js'
-import { VisuallyHidden } from '@reach/visually-hidden'
 import classNames from 'classnames'
 
 import {
@@ -16,8 +15,8 @@ import {
     Tooltip,
 } from '@sourcegraph/wildcard'
 
-import { InsightDashboard } from '../../../../../core/types'
-import { useUiFeatures } from '../../../../../hooks/use-ui-features'
+import { InsightDashboard } from '../../../../../core'
+import { useUiFeatures } from '../../../../../hooks'
 
 import styles from './DashboardMenu.module.scss'
 
@@ -50,20 +49,12 @@ export const DashboardMenu: React.FunctionComponent<React.PropsWithChildren<Dash
                     variant="icon"
                     outline={true}
                     className={classNames(className, styles.triggerButton)}
-                    data-testid="dashboard-context-menu"
                 >
-                    <VisuallyHidden>Dashboard options</VisuallyHidden>
-                    <Icon
-                        svgPath={mdiDotsVertical}
-                        aria-label="Dashboard options"
-                        inline={false}
-                        height={16}
-                        width={16}
-                    />
+                    <Icon svgPath={mdiDotsVertical} height={16} width={16} aria-label="dashboard options" />
                 </MenuButton>
             </Tooltip>
 
-            <MenuList className={styles.menuList} position={Position.bottomEnd}>
+            <MenuList className={styles.menuList} position={Position.bottomStart}>
                 {menuPermissions.configure.display && (
                     <Tooltip content={menuPermissions.configure.tooltip} placement="right">
                         <MenuItem
@@ -72,7 +63,6 @@ export const DashboardMenu: React.FunctionComponent<React.PropsWithChildren<Dash
                             disabled={menuPermissions.configure.disabled}
                             className={styles.menuItem}
                             onSelect={() => onSelect(DashboardMenuAction.Configure)}
-                            data-testid="configure-dashboard"
                         >
                             Configure dashboard
                         </MenuItem>
@@ -82,11 +72,11 @@ export const DashboardMenu: React.FunctionComponent<React.PropsWithChildren<Dash
                 {menuPermissions.copy.display && (
                     <MenuItem
                         as={Button}
+                        outline={true}
                         disabled={menuPermissions.copy.disabled}
                         className={styles.menuItem}
-                        onSelect={() => onSelect(DashboardMenuAction.CopyLink)}
-                        outline={true}
                         data-testid="copy-link"
+                        onSelect={() => onSelect(DashboardMenuAction.CopyLink)}
                     >
                         Copy link
                     </MenuItem>
@@ -99,11 +89,10 @@ export const DashboardMenu: React.FunctionComponent<React.PropsWithChildren<Dash
                     <Tooltip content={menuPermissions.delete.tooltip} placement="right">
                         <MenuItem
                             as={Button}
+                            outline={true}
                             disabled={menuPermissions.delete.disabled}
                             className={classNames(styles.menuItem, styles.menuItemDanger)}
                             onSelect={() => onSelect(DashboardMenuAction.Delete)}
-                            outline={true}
-                            data-testid="delete"
                         >
                             Delete
                         </MenuItem>

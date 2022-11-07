@@ -29,7 +29,7 @@ func TestSubRepoPermissionsPerforce(t *testing.T) {
 	// Test cases
 
 	t.Run("can read README.md", func(t *testing.T) {
-		foo()
+		foo(t)
 		blob, err := userClient.GitBlob(repoName, "master", "README.md")
 		if err != nil {
 			t.Fatal(err)
@@ -58,7 +58,7 @@ func TestSubRepoPermissionsPerforce(t *testing.T) {
 	})
 
 	t.Run("file list excludes excluded files", func(t *testing.T) {
-		foo()
+		foo(t)
 		files, err := userClient.GitListFilenames(repoName, "master")
 		if err != nil {
 			t.Fatal(err)
@@ -310,9 +310,19 @@ func createTestUserAndWaitForRepo(t *testing.T) (*gqltestutil.Client, string) {
 	return userClient, perforceRepoName
 }
 
-func foo() {
+func foo(t *testing.T) {
 	repoUpdaterURL := repoupdater.DefaultClient.URL
+	resp, err := http.Get(fmt.Sprintf("%s/-/debug/list-authz-providers", repoUpdaterURL))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := []byte{}
+	_, err = resp.Body.Read(b)
+	if err != nil {
+		t.Fatal(err)
+	}
 	fmt.Printf("repo updater URL: %s\n", repoUpdaterURL)
+	fmt.Printf("AUTHZ PROVIDERS: %v\n", string(b))
 }
 
 func syncUserPerms(t *testing.T, userID, userName string) {

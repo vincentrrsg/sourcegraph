@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/internal/gqltestutil"
+	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -27,9 +28,8 @@ func TestSubRepoPermissionsPerforce(t *testing.T) {
 
 	// Test cases
 
-	// flaky test
 	t.Run("can read README.md", func(t *testing.T) {
-		t.Skip("skipping because flaky")
+		foo()
 		blob, err := userClient.GitBlob(repoName, "master", "README.md")
 		if err != nil {
 			t.Fatal(err)
@@ -57,9 +57,8 @@ func TestSubRepoPermissionsPerforce(t *testing.T) {
 		}
 	})
 
-	// flaky test
 	t.Run("file list excludes excluded files", func(t *testing.T) {
-		t.Skip("skipping because flaky")
+		foo()
 		files, err := userClient.GitListFilenames(repoName, "master")
 		if err != nil {
 			t.Fatal(err)
@@ -309,6 +308,11 @@ func createTestUserAndWaitForRepo(t *testing.T) (*gqltestutil.Client, string) {
 
 	syncUserPerms(t, aliceID, aliceUsername)
 	return userClient, perforceRepoName
+}
+
+func foo() {
+	repoUpdaterURL := repoupdater.DefaultClient.URL
+	fmt.Printf("repo updater URL: %s\n", repoUpdaterURL)
 }
 
 func syncUserPerms(t *testing.T, userID, userName string) {

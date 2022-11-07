@@ -310,7 +310,7 @@ func createTestUserAndWaitForRepo(t *testing.T) (*gqltestutil.Client, string) {
 }
 
 func foo(t *testing.T) {
-	url := fmt.Sprintf("%s/-/debug/proxies/repo-updater-127.0.0.1/list-authz-providers", baseURL)
+	url := fmt.Sprintf("%s/-/debug/proxies/repo-updater-127.0.0.1/list-authz-providers", *baseURL)
 	fmt.Printf("URL: %s\n", url)
 	resp, err := http.Get(url)
 	if err != nil {

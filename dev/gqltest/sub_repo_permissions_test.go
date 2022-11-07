@@ -10,7 +10,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/sourcegraph/sourcegraph/internal/gqltestutil"
-	"github.com/sourcegraph/sourcegraph/internal/repoupdater"
 	"github.com/sourcegraph/sourcegraph/schema"
 )
 
@@ -311,8 +310,9 @@ func createTestUserAndWaitForRepo(t *testing.T) (*gqltestutil.Client, string) {
 }
 
 func foo(t *testing.T) {
-	repoUpdaterURL := repoupdater.DefaultClient.URL
-	resp, err := http.Get(fmt.Sprintf("%s/-/debug/list-authz-providers", repoUpdaterURL))
+	url := fmt.Sprintf("%s/-/debug/proxies/repo-updater-127.0.0.1/list-authz-providers", baseURL)
+	fmt.Printf("URL: %s\n", url)
+	resp, err := http.Get(url)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -321,7 +321,6 @@ func foo(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("repo updater URL: %s\n", repoUpdaterURL)
 	fmt.Printf("AUTHZ PROVIDERS: %v\n", string(b))
 }
 

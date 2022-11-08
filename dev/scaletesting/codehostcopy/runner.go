@@ -10,6 +10,7 @@ import (
 
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/run"
+
 	"github.com/sourcegraph/sourcegraph/dev/scaletesting/internal/store"
 	"github.com/sourcegraph/sourcegraph/lib/group"
 	"github.com/sourcegraph/sourcegraph/lib/output"
@@ -18,6 +19,7 @@ import (
 type Runner struct {
 	source      CodeHostSource
 	destination CodeHostDestination
+	limit       int
 	store       *store.Store
 	logger      log.Logger
 }
@@ -32,11 +34,12 @@ func logRepo(r *store.Repo, fields ...log.Field) []log.Field {
 	}, fields...)
 }
 
-func NewRunner(logger log.Logger, s *store.Store, source CodeHostSource, dest CodeHostDestination) *Runner {
+func NewRunner(logger log.Logger, s *store.Store, source CodeHostSource, dest CodeHostDestination, limit int) *Runner {
 	return &Runner{
 		logger:      logger,
 		source:      source,
 		destination: dest,
+		limit:       limit,
 		store:       s,
 	}
 }
@@ -55,7 +58,7 @@ func (r *Runner) Run(ctx context.Context, concurrency int) error {
 	// If we're starting fresh, really fetch them.
 	if len(srcRepos) == 0 {
 		r.logger.Info("No existing state found, creating ...")
-		repos, err := r.source.ListRepos(ctx)
+		repos, err := r.source.ListRepos(ctx, r.limit)
 		if err != nil {
 			r.logger.Error("failed to list repositories from source", log.Error(err))
 			return err

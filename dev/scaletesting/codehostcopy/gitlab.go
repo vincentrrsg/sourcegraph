@@ -4,8 +4,10 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/sourcegraph/sourcegraph/lib/errors"
 	"github.com/xanzy/go-gitlab"
+
+	"github.com/sourcegraph/sourcegraph/dev/scaletesting/internal/store"
+	"github.com/sourcegraph/sourcegraph/lib/errors"
 )
 
 type GitLabCodeHost struct {
@@ -28,6 +30,11 @@ func NewGitLabCodeHost(ctx context.Context, def *CodeHostDefinition) (*GitLabCod
 		def: def,
 		c:   gl,
 	}, nil
+}
+
+func (g *GitLabCodeHost) ListRepos(ctx context.Context, limit int) ([]*store.Repo, error) {
+	// TODO: no-op until we need this
+	return nil, nil
 }
 
 func (g *GitLabCodeHost) CreateRepo(ctx context.Context, name string) (*url.URL, error) {

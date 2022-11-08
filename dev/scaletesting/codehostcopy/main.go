@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/sourcegraph/log"
+
 	"github.com/sourcegraph/sourcegraph/dev/scaletesting/internal/store"
 )
 
@@ -19,7 +20,7 @@ import (
 var exampleConfig string
 
 type CodeHostSource interface {
-	ListRepos(ctx context.Context) ([]*store.Repo, error)
+	ListRepos(ctx context.Context, limit int) ([]*store.Repo, error)
 }
 
 type CodeHostDestination interface {
@@ -41,9 +42,14 @@ var app = &cli.App{
 			Usage:    "Path to the config file defining what to copy",
 			Required: true,
 		},
+		&cli.IntFlag{
+			Name:  "limit",
+			Usage: "How many repos to copy",
+			Value: -1,
+		},
 	},
 	Action: func(cmd *cli.Context) error {
-		return doRun(cmd.Context, log.Scoped("runner", ""), cmd.String("state"), cmd.String("config"))
+		return doRun(cmd.Context, log.Scoped("runner", ""), cmd.String("state"), cmd.String("config"), cmd.Int("limit"))
 	},
 	Commands: []*cli.Command{
 		{
@@ -57,7 +63,7 @@ var app = &cli.App{
 	},
 }
 
-func doRun(ctx context.Context, logger log.Logger, state string, config string) error {
+func doRun(ctx context.Context, logger log.Logger, state string, config string, limit int) error {
 	cfg, err := loadConfig(config)
 	if err != nil {
 		var cueErr errors.Error
@@ -71,16 +77,36 @@ func doRun(ctx context.Context, logger log.Logger, state string, config string) 
 	if err != nil {
 		logger.Fatal("failed to init state", log.Error(err))
 	}
-	gh, err := NewGithubCodeHost(ctx, &cfg.From)
-	if err != nil {
-		logger.Fatal("failed to init GitHub code host", log.Error(err))
-	}
-	gl, err := NewGitLabCodeHost(ctx, &cfg.Destination)
-	if err != nil {
-		logger.Fatal("failed to init GitLab code host", log.Error(err))
+
+	var source CodeHostSource
+	var dest CodeHostDestination
+	switch cfg.From.Kind {
+	case "github":
+		source, err = NewGithubCodeHost(ctx, &cfg.From)
+		if err != nil {
+			logger.Fatal("failed to init source GitHub code host", log.Error(err))
+		}
+	case "gitlab":
+		source, err = NewGitLabCodeHost(ctx, &cfg.Destination)
+		if err != nil {
+			logger.Fatal("failed to init source GitLab code host", log.Error(err))
+		}
 	}
 
-	runner := NewRunner(logger, s, gh, gl)
+	switch cfg.Destination.Kind {
+	case "github":
+		dest, err = NewGithubCodeHost(ctx, &cfg.Destination)
+		if err != nil {
+			logger.Fatal("failed to init destination GitHub code host", log.Error(err))
+		}
+	case "gitlab":
+		dest, err = NewGitLabCodeHost(ctx, &cfg.Destination)
+		if err != nil {
+			logger.Fatal("failed to init destination GitHub code host", log.Error(err))
+		}
+	}
+
+	runner := NewRunner(logger, s, source, dest, limit)
 	return runner.Run(ctx, 20)
 }
 

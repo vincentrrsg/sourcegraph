@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/url"
 	"strings"
 
@@ -38,7 +37,7 @@ func NewGithubCodeHost(ctx context.Context, def *CodeHostDefinition) (*GithubCod
 	}, nil
 }
 
-func (g *GithubCodeHost) ListRepos(ctx context.Context) ([]*store.Repo, error) {
+func (g *GithubCodeHost) ListRepos(ctx context.Context, limit int) ([]*store.Repo, error) {
 	var repos []*github.Repository
 
 	if strings.HasPrefix(g.def.Path, "@") {
@@ -46,7 +45,7 @@ func (g *GithubCodeHost) ListRepos(ctx context.Context) ([]*store.Repo, error) {
 		opts := &github.RepositoryListOptions{
 			ListOptions: github.ListOptions{},
 		}
-		for {
+		for len(repos) < limit {
 			rs, resp, err := g.c.Repositories.List(ctx, strings.Replace(g.def.Path, "@", "", 1), opts)
 			if err != nil {
 				return nil, err
@@ -62,7 +61,7 @@ func (g *GithubCodeHost) ListRepos(ctx context.Context) ([]*store.Repo, error) {
 		opts := github.RepositoryListByOrgOptions{
 			ListOptions: github.ListOptions{},
 		}
-		for {
+		for len(repos) < limit {
 			rs, resp, err := g.c.Repositories.ListByOrg(ctx, g.def.Path, &opts)
 			if err != nil {
 				return nil, err
@@ -78,17 +77,41 @@ func (g *GithubCodeHost) ListRepos(ctx context.Context) ([]*store.Repo, error) {
 
 	res := make([]*store.Repo, 0, len(repos))
 	for _, repo := range repos {
-		u, err := url.Parse(repo.GetGitURL())
-		if err != nil {
-			return nil, err
-		}
-		u.User = url.UserPassword(g.def.Username, g.def.Password)
-		u.Scheme = "https"
+		u := repo.GetSSHURL()
+		//u, err := url.Parse(repo.GetSSHURL())
+		//if err != nil {
+		//	return nil, err
+		//}
+		//u.User = url.UserPassword(g.def.Username, g.def.Password)
+		//u.Scheme = ""
 		res = append(res, &store.Repo{
 			Name:   repo.GetName(),
-			GitURL: u.String(),
+			GitURL: u,
 		})
 	}
 
 	return res, nil
+}
+
+func (g *GithubCodeHost) CreateRepo(ctx context.Context, name string) (*url.URL, error) {
+	org, _, err := g.c.Organizations.Get(ctx, g.def.Path)
+	if err != nil {
+		return nil, err
+	}
+
+	repo, _, err := g.c.Repositories.Create(ctx, *org.Name, &github.Repository{
+		Name:         &name,
+		Organization: org,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	gitURL, err := url.Parse(repo.GetSSHURL())
+	if err != nil {
+		return nil, err
+	}
+
+	return gitURL, nil
 }

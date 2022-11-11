@@ -28,6 +28,7 @@ func init() {
 // 🚨 SECURITY: This guarantees the integrity of the identity resolution process (ensuring that new
 // external accounts are linked to the appropriate user account)
 func TestGetAndSaveUser(t *testing.T) {
+	t.Fail()
 	type innerCase struct {
 		description string
 		actorUID    int32

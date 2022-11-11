@@ -3,7 +3,6 @@ package sources
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"github.com/inconshreveable/log15"
 
@@ -334,13 +333,12 @@ func (s BitbucketServerSource) GetUserFork(ctx context.Context, targetRepo *type
 
 	// If not, then we need to create a fork.
 	if fork == nil {
-		createdFork := strings.TrimPrefix(parent.Project.Key+"-"+parent.Slug, "~")
-		fork, err = s.client.Fork(ctx, parent.Project.Key, parent.Slug, bitbucketserver.CreateForkInput{Name: &createdFork})
-
+		fork, err = s.client.Fork(ctx, parent.Project.Key, parent.Slug, bitbucketserver.CreateForkInput{})
 		if err != nil {
 			return nil, errors.Wrapf(err, "creating user fork for %q", user)
 		}
 	}
+
 	return s.copyRepoAsFork(targetRepo, fork, forkNamespace)
 }
 
@@ -358,8 +356,7 @@ func (s BitbucketServerSource) GetNamespaceFork(ctx context.Context, targetRepo 
 
 	// If not, then we need to create a fork.
 	if fork == nil {
-		createdFork := parent.Project.Key + "-" + parent.Slug
-		fork, err = s.client.Fork(ctx, parent.Project.Key, parent.Slug, bitbucketserver.CreateForkInput{Name: &createdFork,
+		fork, err = s.client.Fork(ctx, parent.Project.Key, parent.Slug, bitbucketserver.CreateForkInput{
 			Project: &bitbucketserver.CreateForkInputProject{Key: namespace},
 		})
 		if err != nil {
@@ -374,7 +371,7 @@ func (s BitbucketServerSource) copyRepoAsFork(targetRepo *types.Repo, fork *bitb
 	targetMeta := targetRepo.Metadata.(*bitbucketserver.Repo)
 
 	targetNameAndNamespace := targetMeta.Project.Key + "/" + targetMeta.Slug
-	forkNameAndNamespace := forkNamespace + "/" + fork.Slug
+	forkNameAndNamespace := forkNamespace + "/" + targetMeta.Slug
 
 	// Now we make a copy of the target repo, but with its sources and metadata updated to
 	// point to the fork
@@ -392,7 +389,7 @@ var (
 )
 
 func (s BitbucketServerSource) getFork(ctx context.Context, parent *bitbucketserver.Repo, namespace string) (*bitbucketserver.Repo, error) {
-	repo, err := s.client.Repo(ctx, namespace, parent.Project.Key+"-"+parent.Slug)
+	repo, err := s.client.Repo(ctx, namespace, parent.Slug)
 	if err != nil {
 		if bitbucketserver.IsNotFound(err) {
 			return nil, nil

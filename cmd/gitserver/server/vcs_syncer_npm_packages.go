@@ -48,8 +48,10 @@ type npmPackagesSyncer struct {
 	client npm.Client
 }
 
-var _ packagesSource = &npmPackagesSyncer{}
-var _ packagesDownloadSource = &npmPackagesSyncer{}
+var (
+	_ packagesSource         = &npmPackagesSyncer{}
+	_ packagesDownloadSource = &npmPackagesSyncer{}
+)
 
 func (npmPackagesSyncer) ParseVersionedPackageFromNameAndVersion(name reposource.PackageName, version string) (reposource.VersionedPackage, error) {
 	return reposource.ParseNpmVersionedPackage(string(name) + "@" + version)
@@ -62,6 +64,7 @@ func (npmPackagesSyncer) ParseVersionedPackageFromConfiguration(dep string) (rep
 func (s *npmPackagesSyncer) ParsePackageFromName(name reposource.PackageName) (reposource.Package, error) {
 	return s.ParsePackageFromRepoName(api.RepoName("npm/" + strings.TrimPrefix(string(name), "@")))
 }
+
 func (npmPackagesSyncer) ParsePackageFromRepoName(repoName api.RepoName) (reposource.Package, error) {
 	pkg, err := reposource.ParseNpmPackageFromRepoURL(repoName)
 	if err != nil {
@@ -110,7 +113,7 @@ func (s *npmPackagesSyncer) Download(ctx context.Context, dir string, dep reposo
 	defer tgz.Close()
 
 	if err = decompressTgz(tgz, dir); err != nil {
-		return errors.Wrapf(err, "failed to decompress gzipped tarball for %s", dep)
+		return errors.Wrapf(err, "failed to decompress gzipped tarball for %s", dep.VersionedPackageSyntax())
 	}
 
 	return nil
@@ -144,7 +147,6 @@ func decompressTgz(tgz io.Reader, destination string) error {
 			return !malicious
 		},
 	})
-
 	if err != nil {
 		return err
 	}

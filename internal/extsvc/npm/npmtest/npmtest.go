@@ -1,6 +1,7 @@
 package npmtest
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"testing"
@@ -84,5 +85,10 @@ func (m *MockClient) FetchTarball(_ context.Context, dep *reposource.NpmVersione
 		return nil, errors.Newf("no tarball for %s", version.Dist.TarballURL)
 	}
 
-	return io.NopCloser(tgz), nil
+	// tee to a new buffer, to avoid EOF from reading the same one multiple times
+	var newTgz bytes.Buffer
+	tee := io.TeeReader(tgz, &newTgz)
+	m.Tarballs[version.Dist.TarballURL] = &newTgz
+
+	return io.NopCloser(tee), nil
 }

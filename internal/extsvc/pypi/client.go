@@ -22,7 +22,6 @@
 package pypi
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -34,8 +33,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
 	"golang.org/x/net/html"
+
+	"github.com/sourcegraph/sourcegraph/internal/conf/reposource"
 
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/httpcli"
@@ -69,6 +69,8 @@ func (c *Client) Project(ctx context.Context, project reposource.PackageName) ([
 	if err != nil {
 		return nil, errors.Wrap(err, "PyPI")
 	}
+	defer data.Close()
+
 	return parse(data)
 }
 
@@ -183,10 +185,10 @@ type File struct {
 
 // parse parses the output of Client.Project into a list of files. Anchor tags
 // without href are ignored.
-func parse(b []byte) ([]File, error) {
+func parse(b io.Reader) ([]File, error) {
 	var files []File
 
-	z := html.NewTokenizer(bytes.NewReader(b))
+	z := html.NewTokenizer(b)
 
 	// We want to iterate over the anchor tags. Quoting from PEP503: "[The project]
 	// URL must respond with a valid HTML5 page with a single anchor element per
@@ -263,7 +265,7 @@ OUTER:
 }
 
 // Download downloads a file located at url, respecting the rate limit.
-func (c *Client) Download(ctx context.Context, url string) ([]byte, error) {
+func (c *Client) Download(ctx context.Context, url string) (io.ReadCloser, error) {
 	if err := c.limiter.Wait(ctx); err != nil {
 		return nil, err
 	}
@@ -399,12 +401,13 @@ func ToWheel(f File) (*Wheel, error) {
 	}
 }
 
-func (c *Client) get(ctx context.Context, project reposource.PackageName) (respBody []byte, err error) {
+func (c *Client) get(ctx context.Context, project reposource.PackageName) (respBody io.ReadCloser, err error) {
 	var (
 		reqURL *url.URL
 		req    *http.Request
 	)
 
+urlsLoop:
 	for _, baseURL := range c.urls {
 		if err = c.limiter.Wait(ctx); err != nil {
 			return nil, err
@@ -428,32 +431,42 @@ func (c *Client) get(ctx context.Context, project reposource.PackageName) (respB
 		}
 
 		respBody, err = c.do(req)
-		if err == nil || !errcode.IsNotFound(err) {
-			break
+		switch {
+		// if err not nil and err is not a not-found error
+		default:
+			if respBody != nil {
+				respBody.Close()
+			}
+		// if err is a not-found error
+		case !errcode.IsNotFound(err):
+			if respBody != nil {
+				respBody.Close()
+			}
+			break urlsLoop
+		// if no error
+		case err == nil:
+			break urlsLoop
 		}
 	}
 
 	return respBody, err
 }
 
-func (c *Client) do(req *http.Request) ([]byte, error) {
+func (c *Client) do(req *http.Request) (io.ReadCloser, error) {
 	resp, err := c.cli.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	defer resp.Body.Close()
-
-	bs, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	if resp.StatusCode != http.StatusOK {
-		return nil, &Error{path: req.URL.Path, code: resp.StatusCode, message: string(bs)}
+		bs, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return resp.Body, &Error{path: req.URL.Path, code: resp.StatusCode, message: fmt.Sprintf("failed to read non-200 body: %v", err)}
+		}
+		return resp.Body, &Error{path: req.URL.Path, code: resp.StatusCode, message: string(bs)}
 	}
 
-	return bs, nil
+	return resp.Body, nil
 }
 
 type Error struct {

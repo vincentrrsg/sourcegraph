@@ -1,7 +1,6 @@
 package npmtest
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"testing"
@@ -13,7 +12,7 @@ import (
 
 type MockClient struct {
 	Packages map[reposource.PackageName]*npm.PackageInfo
-	Tarballs map[string][]byte
+	Tarballs map[string]io.Reader
 }
 
 func NewMockClient(t testing.TB, deps ...string) *MockClient {
@@ -85,5 +84,5 @@ func (m *MockClient) FetchTarball(_ context.Context, dep *reposource.NpmVersione
 		return nil, errors.Newf("no tarball for %s", version.Dist.TarballURL)
 	}
 
-	return io.NopCloser(bytes.NewReader(tgz)), nil
+	return io.NopCloser(tgz), nil
 }

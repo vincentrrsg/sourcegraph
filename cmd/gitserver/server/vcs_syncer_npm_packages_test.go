@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -50,7 +51,7 @@ func TestNoMaliciousFilesNpm(t *testing.T) {
 	extractPath := path.Join(dir, "extracted")
 	assert.Nil(t, os.Mkdir(extractPath, os.ModePerm))
 
-	tgz := bytes.NewReader(createMaliciousTgz(t))
+	tgz := createMaliciousTgz(t)
 
 	err := decompressTgz(tgz, extractPath)
 	assert.Nil(t, err) // Malicious files are skipped
@@ -67,7 +68,7 @@ func TestNoMaliciousFilesNpm(t *testing.T) {
 	}
 }
 
-func createMaliciousTgz(t *testing.T) []byte {
+func createMaliciousTgz(t *testing.T) io.Reader {
 	fileInfos := []fileInfo{
 		{harmlessPath, []byte("harmless")},
 	}
@@ -97,7 +98,7 @@ func TestNpmCloneCommand(t *testing.T) {
 				},
 			},
 		},
-		Tarballs: map[string][]byte{
+		Tarballs: map[string]io.Reader{
 			exampleNpmVersion:  tgz1,
 			exampleNpmVersion2: tgz2,
 		},
@@ -195,7 +196,7 @@ func TestNpmCloneCommand(t *testing.T) {
 	checkTagRemoved()
 }
 
-func createTgz(t *testing.T, fileInfos []fileInfo) []byte {
+func createTgz(t *testing.T, fileInfos []fileInfo) io.Reader {
 	t.Helper()
 
 	var buf bytes.Buffer
@@ -209,7 +210,7 @@ func createTgz(t *testing.T, fileInfos []fileInfo) []byte {
 	require.NoError(t, tarWriter.Close())
 	require.NoError(t, gzipWriter.Close())
 
-	return buf.Bytes()
+	return &buf
 }
 
 func addFileToTarball(t *testing.T, tarWriter *tar.Writer, info fileInfo) error {
@@ -235,7 +236,7 @@ var _ fs.FileInfo = &fileInfo{}
 
 func (info *fileInfo) Name() string       { return path.Base(info.path) }
 func (info *fileInfo) Size() int64        { return int64(len(info.contents)) }
-func (info *fileInfo) Mode() fs.FileMode  { return 0600 }
+func (info *fileInfo) Mode() fs.FileMode  { return 0o600 }
 func (info *fileInfo) ModTime() time.Time { return time.Unix(0, 0) }
 func (info *fileInfo) IsDir() bool        { return false }
 func (info *fileInfo) Sys() any           { return nil }
@@ -262,7 +263,7 @@ func TestDecompressTgz(t *testing.T) {
 				fileInfos = append(fileInfos, fileInfo{path: path, contents: []byte("x")})
 			}
 
-			tgz := bytes.NewReader(createTgz(t, fileInfos))
+			tgz := createTgz(t, fileInfos)
 
 			require.NoError(t, decompressTgz(tgz, dir))
 

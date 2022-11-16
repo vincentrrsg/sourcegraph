@@ -126,7 +126,7 @@ func TestUnpackPythonPackage_ZIP(t *testing.T) {
 	}
 
 	tmp := t.TempDir()
-	if err := unpackPythonPackage(zipBuf.Bytes(), "https://some.where/pckg.zip", tmp); err != nil {
+	if err := unpackPythonPackage(&zipBuf, "https://some.where/pckg.zip", tmp); err != nil {
 		t.Fatal()
 	}
 
@@ -176,7 +176,7 @@ func TestUnpackPythonPackage_InvalidZip(t *testing.T) {
 }
 
 func TestUnpackPythonPackage_UnsupportedFormat(t *testing.T) {
-	if err := unpackPythonPackage([]byte{}, "https://some.where/pckg.exe", ""); err == nil {
+	if err := unpackPythonPackage(bytes.NewReader([]byte{}), "https://some.where/pckg.exe", ""); err == nil {
 		t.Fatal()
 	}
 }

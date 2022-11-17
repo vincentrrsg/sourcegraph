@@ -1,7 +1,7 @@
 import { fetchEventSource } from '@microsoft/fetch-event-source'
 /* eslint-disable id-length */
 import { Observable, fromEvent, Subscription, OperatorFunction, pipe, Subscriber, Notification } from 'rxjs'
-import { defaultIfEmpty, map, materialize, scan, switchMap } from 'rxjs/operators'
+import { defaultIfEmpty, map, materialize, scan, switchMap } from 'rxjs/operators/index'
 import { AggregableBadge } from 'sourcegraph'
 
 import { asError, ErrorLike, isErrorLike } from '@sourcegraph/common'

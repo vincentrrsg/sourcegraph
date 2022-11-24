@@ -51,7 +51,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// before running this script, register the instance with "sg src-instance register scaletesting https://scaletesting.sgdev.org"
 	lines, err := run.Bash(ctx, "sg src-instance list").Run().Lines()
 	if err != nil {
 		log.Fatal(err)

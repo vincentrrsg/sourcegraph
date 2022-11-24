@@ -228,7 +228,7 @@ func dbUpdateUserExternalAccount(cmd *cli.Context) error {
 	}
 
 	// Connect to the database.
-	conn, err := connections.EnsureNewFrontendDB(postgresdsn.New("", "", conf.GetEnv), "frontend", &observation.TestContext)
+	conn, err := connections.RawNewFrontendDB(postgresdsn.New("", "", conf.GetEnv), "frontend", &observation.TestContext)
 	if err != nil {
 		return err
 	}

@@ -74,29 +74,35 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for _, line := range data {
+	for i, line := range data {
+		if i > 3 {
+			break
+		}
 		username := line[0]
 		oAuthToken := line[1]
 
-		err = run.Bash(ctx, "sg src users create",
+		println(fmt.Sprintf("Processing user %s", username))
+
+		getUserResult, err := run.Bash(ctx, "sg src users create",
 			fmt.Sprintf("-email=%s@scaletesting.sourcegraph.com", username),
-			fmt.Sprintf("-username=%s", username)).Run().Wait()
-		if err != nil {
+			fmt.Sprintf("-username=%s", username)).Run().String()
+		if err != nil && !strings.Contains(getUserResult, "err_username_exists") {
 			log.Fatal(err)
 		}
 
 		command := run.Bash(ctx, "go run ./dev/sg/. db update-user-external-services",
-			fmt.Sprintf("--github.username=%s", username),
-			fmt.Sprintf("--sg.username=%s", username),
-			fmt.Sprintf("--extsvc.display-name=%s", cfg.sgExtSvcDisplayName),
-			fmt.Sprintf("--github.token=%s", cfg.ghAdminToken),
-			fmt.Sprintf("--github.baseurl=%s", cfg.ghBaseUrl),
-			fmt.Sprintf("--github.client-id=%s", cfg.ghClientId),
-			fmt.Sprintf("--oauth.token=%s", oAuthToken))
+			fmt.Sprintf("--github.username=\"%s\"", username),
+			fmt.Sprintf("--sg.username=\"%s\"", username),
+			fmt.Sprintf("--extsvc.display-name=\"%s\"", cfg.sgExtSvcDisplayName),
+			fmt.Sprintf("--github.token=\"%s\"", cfg.ghAdminToken),
+			fmt.Sprintf("--github.baseurl=\"%s\"", cfg.ghBaseUrl),
+			fmt.Sprintf("--github.client-id=\"%s\"", cfg.ghClientId),
+			fmt.Sprintf("--oauth.token=\"%s\"", oAuthToken))
 
 		output, err := command.Run().Lines()
 		if err != nil {
-			log.Fatal(err)
+			println(fmt.Sprintf("%v", output))
+			log.Fatal(err.Error())
 		}
 
 		println(fmt.Sprintf("%v", output))

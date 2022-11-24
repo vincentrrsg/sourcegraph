@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/sourcegraph/run"
 )
 
 type config struct {
@@ -29,7 +33,7 @@ func main() {
 
 	flag.Parse()
 
-	//ctx := context.Background()
+	ctx := context.Background()
 
 	csvF, err := os.Open(cfg.csvPath)
 	if err != nil {
@@ -39,31 +43,62 @@ func main() {
 	defer csvF.Close()
 
 	csvReader := csv.NewReader(csvF)
+	if _, err = csvReader.Read(); err != nil {
+		log.Fatal(err)
+	}
 	data, err := csvReader.ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	for _, line := range data {
-		println(fmt.Sprintf("%v", line))
+	// before running this script, register the instance with "sg src-instance register scaletesting https://scaletesting.sgdev.org"
+	lines, err := run.Bash(ctx, "sg src-instance list").Run().Lines()
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	//for {
-	//	username := ""
-	//	oAuthToken := ""
-	//
-	//	command := run.Bash(ctx, "go run ./dev/sg/. db update-user-external-services",
-	//		"--github.username=sander",
-	//		"--sg.username=sander",
-	//		"--extsvc.display-name=\"GITHUB #2\"",
-	//		"--github.token=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",
-	//		"--github.baseurl=https://ghe-scaletesting.sgdev.org",
-	//		"--github.client-id=f08ef1de0497c6de281e",
-	//		"--oauth.token=foobar")
-	//
-	//	lines, err := command.Run().Lines()
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}
+	foundSct := false
+	for _, l := range lines {
+		if strings.Contains(l, "scaletesting") {
+			foundSct = true
+			break
+		}
+	}
+
+	if !foundSct {
+		log.Fatal("Scaletesting instance not registered with sg src-instance! First run:\nsg src-instance register scaletesting https://scaletesting.sgdev.org")
+	}
+
+	err = run.Bash(ctx, "sg src-instance use scaletesting").Run().Wait()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, line := range data {
+		username := line[0]
+		oAuthToken := line[1]
+
+		err = run.Bash(ctx, "sg src users create",
+			fmt.Sprintf("-email=%s@scaletesting.sourcegraph.com", username),
+			fmt.Sprintf("-username=%s", username)).Run().Wait()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		command := run.Bash(ctx, "go run ./dev/sg/. db update-user-external-services",
+			fmt.Sprintf("--github.username=%s", username),
+			fmt.Sprintf("--sg.username=%s", username),
+			fmt.Sprintf("--extsvc.display-name=%s", cfg.sgExtSvcDisplayName),
+			fmt.Sprintf("--github.token=%s", cfg.ghAdminToken),
+			fmt.Sprintf("--github.baseurl=%s", cfg.ghBaseUrl),
+			fmt.Sprintf("--github.client-id=%s", cfg.ghClientId),
+			fmt.Sprintf("--oauth.token=%s", oAuthToken))
+
+		output, err := command.Run().Lines()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		println(fmt.Sprintf("%v", output))
+	}
 }

@@ -73,20 +73,18 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for i, line := range data {
-		if i > 3 {
-			break
-		}
+	for _, line := range data {
 		username := line[0]
 		oAuthToken := line[1]
 
 		println(fmt.Sprintf("Processing user %s", username))
 
-		getUserResult, err := run.Bash(ctx, "sg src users create",
+		getUserResult, sgErr := run.Bash(ctx, "sg src users create",
 			fmt.Sprintf("-email=%s@scaletesting.sourcegraph.com", username),
 			fmt.Sprintf("-username=%s", username)).Run().String()
-		if err != nil && !strings.Contains(getUserResult, "err_username_exists") {
-			log.Fatal(err)
+
+		if sgErr != nil && !strings.Contains(getUserResult, "err_username_exists") {
+			log.Fatal(sgErr)
 		}
 
 		command := run.Bash(ctx, "go run ./dev/sg/. db update-user-external-services",
@@ -98,12 +96,9 @@ func main() {
 			fmt.Sprintf("--github.client-id=\"%s\"", cfg.ghClientId),
 			fmt.Sprintf("--oauth.token=\"%s\"", oAuthToken))
 
-		output, err := command.Run().Lines()
-		if err != nil {
-			println(fmt.Sprintf("%v", output))
-			log.Fatal(err.Error())
+		output, sgErr := command.Run().String()
+		if sgErr != nil {
+			log.Fatalf("Failed to update external services for user %s: %s", username, output)
 		}
-
-		println(fmt.Sprintf("%v", output))
 	}
 }

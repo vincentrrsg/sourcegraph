@@ -540,10 +540,8 @@ func TestRepos_ListMinimalRepos_userID(t *testing.T) {
 
 	// Create a user
 	user, err := db.Users().Create(ctx, NewUser{
-		Email:                 "a1@example.com",
-		Username:              "u1",
-		Password:              "p",
-		EmailVerificationCode: "c",
+		Username: "u1",
+		Password: "p",
 	})
 	require.NoError(t, err)
 

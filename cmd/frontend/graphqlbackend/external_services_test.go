@@ -143,7 +143,6 @@ func TestUpdateExternalService(t *testing.T) {
 		}
 	})
 
-	userID := int32(1)
 	var cachedUpdate *database.ExternalServiceUpdate
 
 	users := database.NewMockUserStore()
@@ -157,18 +156,16 @@ func TestUpdateExternalService(t *testing.T) {
 	externalServices.GetByIDFunc.SetDefaultHook(func(_ context.Context, id int64) (*types.ExternalService, error) {
 		if cachedUpdate == nil {
 			return &types.ExternalService{
-				ID:              id,
-				NamespaceUserID: userID,
-				Kind:            extsvc.KindGitHub,
-				Config:          extsvc.NewEmptyConfig(),
+				ID:     id,
+				Kind:   extsvc.KindGitHub,
+				Config: extsvc.NewEmptyConfig(),
 			}, nil
 		}
 		return &types.ExternalService{
-			ID:              id,
-			Kind:            extsvc.KindGitHub,
-			DisplayName:     *cachedUpdate.DisplayName,
-			Config:          extsvc.NewUnencryptedConfig(*cachedUpdate.Config),
-			NamespaceUserID: userID,
+			ID:          id,
+			Kind:        extsvc.KindGitHub,
+			DisplayName: *cachedUpdate.DisplayName,
+			Config:      extsvc.NewUnencryptedConfig(*cachedUpdate.Config),
 		}, nil
 	})
 
@@ -176,10 +173,9 @@ func TestUpdateExternalService(t *testing.T) {
 	db.UsersFunc.SetDefaultReturn(users)
 	db.ExternalServicesFunc.SetDefaultReturn(externalServices)
 
-	RunTests(t, []*Test{
-		{
-			Schema: mustParseGraphQLSchema(t, db),
-			Query: `
+	RunTest(t, &Test{
+		Schema: mustParseGraphQLSchema(t, db),
+		Query: `
 			mutation {
 				updateExternalService(input: {
 					id: "RXh0ZXJuYWxTZXJ2aWNlOjQ=",
@@ -191,7 +187,7 @@ func TestUpdateExternalService(t *testing.T) {
 				}
 			}
 		`,
-			ExpectedResult: `
+		ExpectedResult: `
 			{
 				"updateExternalService": {
 				  "displayName": "GITHUB #2",
@@ -200,8 +196,7 @@ func TestUpdateExternalService(t *testing.T) {
 				}
 			}
 		`,
-			Context: actor.WithActor(context.Background(), &actor.Actor{UID: 1}),
-		},
+		Context: actor.WithActor(context.Background(), &actor.Actor{UID: 1}),
 	})
 }
 

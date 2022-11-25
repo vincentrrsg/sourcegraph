@@ -877,10 +877,6 @@ func (s *Syncer) observeSync(
 		var owner string
 		if svc == nil {
 			owner = ownerUndefined
-		} else if svc.NamespaceUserID > 0 {
-			owner = ownerUser
-		} else if svc.NamespaceOrgID > 0 {
-			owner = ownerOrg
 		} else {
 			owner = ownerSite
 		}

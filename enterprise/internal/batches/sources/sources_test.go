@@ -102,13 +102,6 @@ func TestLoadExternalService(t *testing.T) {
 		DisplayName: "GitHub global",
 		Config:      extsvc.NewUnencryptedConfig(`{"url": "https://github.com", "authorization": {}}`),
 	}
-	userOwnedES := types.ExternalService{
-		ID:              2,
-		Kind:            extsvc.KindGitHub,
-		DisplayName:     "GitHub user owned",
-		NamespaceUserID: 1234,
-		Config:          extsvc.NewUnencryptedConfig(`{"url": "https://github.com", "authorization": {}}`),
-	}
 	newerGlobalES := types.ExternalService{
 		ID:          3,
 		Kind:        extsvc.KindGitHub,
@@ -130,10 +123,6 @@ func TestLoadExternalService(t *testing.T) {
 				ID:       globalES.URN(),
 				CloneURL: "https://github.com/sourcegraph/sourcegraph",
 			},
-			userOwnedES.URN(): {
-				ID:       userOwnedES.URN(),
-				CloneURL: "https://123@github.com/sourcegraph/sourcegraph",
-			},
 			newerGlobalES.URN(): {
 				ID:       newerGlobalES.URN(),
 				CloneURL: "https://123456@github.com/sourcegraph/sourcegraph",
@@ -147,9 +136,6 @@ func TestLoadExternalService(t *testing.T) {
 		if _, ok := repo.Sources[globalES.URN()]; ok {
 			sources = append(sources, &globalES)
 		}
-		if _, ok := repo.Sources[userOwnedES.URN()]; ok {
-			sources = append(sources, &userOwnedES)
-		}
 		if _, ok := repo.Sources[newerGlobalES.URN()]; ok {
 			sources = append(sources, &newerGlobalES)
 		}
@@ -162,17 +148,6 @@ func TestLoadExternalService(t *testing.T) {
 		t.Fatalf("invalid error, expected nil, got %v", err)
 	}
 	if have, want := svc.ID, newerGlobalES.ID; have != want {
-		t.Fatalf("invalid external service returned, want=%d have=%d", want, have)
-	}
-
-	// Now delete the global external services and expect the user owned external service to be returned.
-	delete(repo.Sources, newerGlobalES.URN())
-	delete(repo.Sources, globalES.URN())
-	svc, err = loadExternalService(ctx, ess, database.ExternalServicesListOptions{IDs: repo.ExternalServiceIDs()})
-	if err != nil {
-		t.Fatalf("invalid error, expected nil, got %v", err)
-	}
-	if have, want := svc.ID, userOwnedES.ID; have != want {
 		t.Fatalf("invalid external service returned, want=%d have=%d", want, have)
 	}
 }

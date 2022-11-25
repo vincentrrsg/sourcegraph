@@ -324,15 +324,6 @@ type ValidateExternalServiceConfigOptions struct {
 	Config string
 	// The list of authN providers configured on the instance.
 	AuthProviders []schema.AuthProviders
-	// If non zero, indicates the user that owns the external service.
-	NamespaceUserID int32
-	// If non zero, indicates the organization that owns the codehost connection.
-	NamespaceOrgID int32
-}
-
-// IsSiteOwned returns true if the external service is owned by the site.
-func (e *ValidateExternalServiceConfigOptions) IsSiteOwned() bool {
-	return e.NamespaceUserID == 0 && e.NamespaceOrgID == 0
 }
 
 type ValidateExternalServiceConfigFunc = func(ctx context.Context, e ExternalServiceStore, opt ValidateExternalServiceConfigOptions) (normalized []byte, err error)
@@ -374,29 +365,6 @@ func MakeValidateExternalServiceConfigFunc(gitHubValidators []func(*types.GitHub
 			return nil, errors.Errorf(
 				"unable to write external service config as it contains redacted fields, this is likely a bug rather than a problem with your config",
 			)
-		}
-
-		// For user-added and org-added external services, we need to prevent them from using disallowed fields.
-		if !opt.IsSiteOwned() {
-			// We do not allow users to add external service other than GitHub.com and GitLab.com
-			result := gjson.GetBytes(normalized, "url")
-			baseURL, err := url.Parse(result.String())
-			if err != nil {
-				return nil, errors.Wrap(err, "parse base URL")
-			}
-			normalizedURL := extsvc.NormalizeBaseURL(baseURL).String()
-			if normalizedURL != "https://github.com/" &&
-				normalizedURL != "https://gitlab.com/" {
-				return nil, errors.New("external service only allowed for https://github.com/ and https://gitlab.com/")
-			}
-
-			disallowedFields := []string{"repositoryPathPattern", "nameTransformations", "rateLimit"}
-			results := gjson.GetManyBytes(normalized, disallowedFields...)
-			for i, r := range results {
-				if r.Exists() {
-					return nil, errors.Errorf("field %q is not allowed in a user-added external service", disallowedFields[i])
-				}
-			}
 		}
 
 		res, err := sc.Validate(gojsonschema.NewBytesLoader(normalized))
@@ -575,11 +543,9 @@ func (e *externalServiceStore) Create(ctx context.Context, confGet func() *conf.
 	}
 
 	normalized, err := ValidateExternalServiceConfig(ctx, e, ValidateExternalServiceConfigOptions{
-		Kind:            es.Kind,
-		Config:          rawConfig,
-		AuthProviders:   confGet().AuthProviders,
-		NamespaceUserID: es.NamespaceUserID,
-		NamespaceOrgID:  es.NamespaceOrgID,
+		Kind:          es.Kind,
+		Config:        rawConfig,
+		AuthProviders: confGet().AuthProviders,
 	})
 	if err != nil {
 		return err
@@ -664,11 +630,9 @@ func (e *externalServiceStore) Upsert(ctx context.Context, svcs ...*types.Extern
 		}
 
 		normalized, err := ValidateExternalServiceConfig(ctx, e, ValidateExternalServiceConfigOptions{
-			Kind:            s.Kind,
-			Config:          rawConfig,
-			AuthProviders:   authProviders,
-			NamespaceUserID: s.NamespaceUserID,
-			NamespaceOrgID:  s.NamespaceOrgID,
+			Kind:          s.Kind,
+			Config:        rawConfig,
+			AuthProviders: authProviders,
 		})
 		if err != nil {
 			return errors.Wrapf(err, "validating service of kind %q", s.Kind)
@@ -905,8 +869,6 @@ func (e *externalServiceStore) Update(ctx context.Context, ps []schema.AuthProvi
 			Kind:              externalService.Kind,
 			Config:            unredactedConfig,
 			AuthProviders:     ps,
-			NamespaceUserID:   externalService.NamespaceUserID,
-			NamespaceOrgID:    externalService.NamespaceOrgID,
 		})
 		if err != nil {
 			return err

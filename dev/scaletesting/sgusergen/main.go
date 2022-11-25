@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/sourcegraph/run"
+
+	"github.com/sourcegraph/sourcegraph/lib/group"
 )
 
 type config struct {
@@ -32,6 +34,8 @@ func main() {
 	flag.StringVar(&cfg.sgExtSvcDisplayName, "sg.ExtSvcDisplayName", "", "(required) display name of the code host connection on the SG instance")
 
 	flag.Parse()
+
+	// TODO: PGDATASOURCE check
 
 	ctx := context.Background()
 
@@ -73,32 +77,42 @@ func main() {
 		log.Fatal(err)
 	}
 
+	g := group.New().WithMaxConcurrency(25)
 	for _, line := range data {
-		username := line[0]
-		oAuthToken := line[1]
+		currLine := line
+		g.Go(func() {
+			username := currLine[0]
+			oAuthToken := currLine[1]
 
-		println(fmt.Sprintf("Processing user %s", username))
+			println(fmt.Sprintf("Processing user %s", username))
 
-		getUserResult, sgErr := run.Bash(ctx, "sg src users create",
-			fmt.Sprintf("-email=%s@scaletesting.sourcegraph.com", username),
-			fmt.Sprintf("-username=%s", username)).Run().String()
+			completed := false
+			for !completed {
+				getUserResult, sgErr := run.Bash(ctx, "sg src users create",
+					fmt.Sprintf("-email=%s@scaletesting.sourcegraph.com", username),
+					fmt.Sprintf("-username=%s", username)).Run().String()
 
-		if sgErr != nil && !strings.Contains(getUserResult, "err_username_exists") {
-			log.Fatal(sgErr)
-		}
+				if sgErr != nil && !strings.Contains(getUserResult, "err_username_exists") {
+					log.Printf("Failed to create user %s: %s\nRetrying...", username, getUserResult)
+					continue
+				}
 
-		command := run.Bash(ctx, "go run ./dev/sg/. db update-user-external-services",
-			fmt.Sprintf("--github.username=\"%s\"", username),
-			fmt.Sprintf("--sg.username=\"%s\"", username),
-			fmt.Sprintf("--extsvc.display-name=\"%s\"", cfg.sgExtSvcDisplayName),
-			fmt.Sprintf("--github.token=\"%s\"", cfg.ghAdminToken),
-			fmt.Sprintf("--github.baseurl=\"%s\"", cfg.ghBaseUrl),
-			fmt.Sprintf("--github.client-id=\"%s\"", cfg.ghClientId),
-			fmt.Sprintf("--oauth.token=\"%s\"", oAuthToken))
+				command := run.Bash(ctx, "sg db update-user-external-services",
+					fmt.Sprintf("--github.username=\"%s\"", username),
+					fmt.Sprintf("--sg.username=\"%s\"", username),
+					fmt.Sprintf("--extsvc.display-name=\"%s\"", cfg.sgExtSvcDisplayName),
+					fmt.Sprintf("--github.token=\"%s\"", cfg.ghAdminToken),
+					fmt.Sprintf("--github.baseurl=\"%s\"", cfg.ghBaseUrl),
+					fmt.Sprintf("--github.client-id=\"%s\"", cfg.ghClientId),
+					fmt.Sprintf("--oauth.token=\"%s\"", oAuthToken))
 
-		output, sgErr := command.Run().String()
-		if sgErr != nil {
-			log.Fatalf("Failed to update external services for user %s: %s", username, output)
-		}
+				output, sgErr := command.Run().String()
+				if sgErr != nil {
+					log.Printf("Failed to update external services for user %s: %s\nRetrying...", username, output)
+					continue
+				}
+				completed = true
+			}
+		})
 	}
 }

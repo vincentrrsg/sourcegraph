@@ -97,7 +97,7 @@ func main() {
 					continue
 				}
 
-				command := run.Bash(ctx, "sg db update-user-external-services",
+				command := run.Bash(ctx, "./sg db update-user-external-services",
 					fmt.Sprintf("--github.username=\"%s\"", username),
 					fmt.Sprintf("--sg.username=\"%s\"", username),
 					fmt.Sprintf("--extsvc.display-name=\"%s\"", cfg.sgExtSvcDisplayName),

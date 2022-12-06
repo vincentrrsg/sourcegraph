@@ -439,7 +439,12 @@ func getConfigPrototype(kind string) (any, error) {
 	case KindJVMPackages:
 		return &schema.JVMPackagesConnection{}, nil
 	case KindPagure:
-		return &schema.PagureConnection{}, nil
+		return &schema.PagureConnection{
+			RateLimit: &schema.RateLimit{
+				Enabled:         true,
+				RequestsPerHour: 28800,
+			},
+		}, nil
 	case KindNpmPackages:
 		return &schema.NpmPackagesConnection{}, nil
 	case KindPythonPackages:

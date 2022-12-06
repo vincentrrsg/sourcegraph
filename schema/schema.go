@@ -1434,23 +1434,14 @@ type PagureConnection struct {
 	// Namespace description: Filters projects by namespace.
 	Namespace string `json:"namespace,omitempty"`
 	// Pattern description: Filters projects by pattern string.
-	Pattern string `json:"pattern,omitempty"`
-	// RateLimit description: Rate limit applied when making API requests to Pagure.
-	RateLimit *PagureRateLimit `json:"rateLimit,omitempty"`
+	Pattern   string     `json:"pattern,omitempty"`
+	RateLimit *RateLimit `json:"rateLimit,omitempty"`
 	// Tags description: Filters the projects returned by their tags.
 	Tags []string `json:"tags,omitempty"`
 	// Token description: API token for the Pagure instance.
 	Token string `json:"token,omitempty"`
 	// Url description: URL of a Pagure instance, such as https://pagure.example.com
 	Url string `json:"url,omitempty"`
-}
-
-// PagureRateLimit description: Rate limit applied when making API requests to Pagure.
-type PagureRateLimit struct {
-	// Enabled description: true if rate limiting is enabled.
-	Enabled bool `json:"enabled"`
-	// RequestsPerHour description: Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 500, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 500 requests immediately, provided that the complexity cost of each request is 1.
-	RequestsPerHour float64 `json:"requestsPerHour"`
 }
 
 // ParentSourcegraph description: URL to fetch unreachable repository details from. Defaults to "https://sourcegraph.com"
@@ -1578,6 +1569,14 @@ type Ranking struct {
 	MaxReorderQueueSize *int `json:"maxReorderQueueSize,omitempty"`
 	// RepoScores description: a map of URI directories to numeric scores for specifying search result importance, like {"github.com": 500, "github.com/sourcegraph": 300, "github.com/sourcegraph/sourcegraph": 100}. Would rank "github.com/sourcegraph/sourcegraph" as 500+300+100=900, and "github.com/other/foo" as 500.
 	RepoScores map[string]float64 `json:"repoScores,omitempty"`
+}
+
+// RateLimit description: Rate limit applied when making API requests to an external service.
+type RateLimit struct {
+	// Enabled description: true if rate limiting is enabled.
+	Enabled bool `json:"enabled"`
+	// RequestsPerHour description: Requests per hour permitted. This is an average, calculated per second. Internally, the burst limit is set to 500, which implies that for a requests per hour limit as low as 1, users will continue to be able to send a maximum of 500 requests immediately, provided that the complexity cost of each request is 1.
+	RequestsPerHour float64 `json:"requestsPerHour"`
 }
 
 // RepoPurgeWorker description: Configuration for repository purge worker.

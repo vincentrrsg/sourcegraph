@@ -76,19 +76,27 @@ func (s *PagureSource) ListRepos(ctx context.Context, results chan SourceResult)
 		Fork:      s.cli.Config.Forks,
 	}
 
-	it := s.cli.ListProjects(ctx, args)
-
-	for it.Next() {
-		repo, err := s.makeRepo(it.Current())
+	for {
+		page, err := s.cli.ListProjects(ctx, args)
 		if err != nil {
 			results <- SourceResult{Source: s, Err: err}
 			return
 		}
-		results <- SourceResult{Source: s, Repo: repo}
-	}
 
-	if err := it.Err(); err != nil {
-		results <- SourceResult{Source: s, Err: err}
+		for _, p := range page.Projects {
+			repo, err := s.makeRepo(p)
+			if err != nil {
+				results <- SourceResult{Source: s, Err: err}
+				return
+			}
+			results <- SourceResult{Source: s, Repo: repo}
+		}
+
+		if page.Next == "" {
+			break
+		}
+
+		args.Cursor.Page++
 	}
 }
 

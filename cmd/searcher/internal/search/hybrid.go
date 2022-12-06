@@ -218,23 +218,21 @@ func zoektSearchIgnorePaths(ctx context.Context, client zoekt.Streamer, p *proto
 		return false, err
 	}
 
-	// We found results and we got past wrongCommit, so we know what we have
-	// streamed back is correct.
-	if foundResults {
-		return true, nil
+	// we have no matches, so we don't know if we searched the correct commit.
+	if !foundResults {
+		newIndexed, ok, err := zoektIndexedCommit(ctx, client, p.Repo)
+		if err != nil {
+			return false, errors.Wrap(err, "failed to double check indexed commit")
+		}
+		if !ok {
+			// let the retry logic handle the call to zoektIndexedCommit again
+			return false, nil
+		}
+		retry := newIndexed != indexed
+		return !retry, nil
 	}
 
-	// we have no matches, so we don't know if we searched the correct commit
-	newIndexed, ok, err := zoektIndexedCommit(ctx, client, p.Repo)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to double check indexed commit")
-	}
-	if !ok {
-		// let the retry logic handle the call to zoektIndexedCommit again
-		return false, nil
-	}
-	retry := newIndexed != indexed
-	return !retry, nil
+	return true, nil
 }
 
 // zoektCompile builds a text search zoekt query for p.

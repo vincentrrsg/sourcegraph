@@ -2,8 +2,6 @@ package httpserver
 
 import (
 	"net"
-
-	_ "github.com/sourcegraph/sourcegraph/internal/env"
 )
 
 // NewListener returns a TCP listener accepting connections

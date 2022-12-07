@@ -273,12 +273,12 @@ func GeneratePipeline(c Config) (*bk.Pipeline, error) {
 		ops.Merge(imageScanOps)
 
 		// Core tests
-		ops.Merge(CoreTestOperations(changed.All, CoreTestOperationsOptions{
-			ChromaticShouldAutoAccept: c.RunType.Is(runtype.MainBranch),
-			MinimumUpgradeableVersion: minimumUpgradeableVersion,
-			ForceReadyForReview:       c.MessageFlags.ForceReadyForReview,
-			CacheBundleSize:           c.RunType.Is(runtype.MainBranch, runtype.MainDryRun),
-		}))
+		// ops.Merge(CoreTestOperations(changed.All, CoreTestOperationsOptions{
+		// 	ChromaticShouldAutoAccept: c.RunType.Is(runtype.MainBranch),
+		// 	MinimumUpgradeableVersion: minimumUpgradeableVersion,
+		// 	ForceReadyForReview:       c.MessageFlags.ForceReadyForReview,
+		// 	CacheBundleSize:           c.RunType.Is(runtype.MainBranch, runtype.MainDryRun),
+		// }))
 
 		// Integration tests
 		ops.Merge(operations.NewNamedSet("Integration tests",

@@ -266,31 +266,31 @@ func GeneratePipeline(c Config) (*bk.Pipeline, error) {
 		ops.Merge(imageBuildOps)
 
 		// Trivy security scans
-		imageScanOps := operations.NewNamedSet("Image security scans")
-		for _, dockerImage := range images.SourcegraphDockerImages {
-			imageScanOps.Append(trivyScanCandidateImage(dockerImage, c.candidateImageTag()))
-		}
-		ops.Merge(imageScanOps)
+		// imageScanOps := operations.NewNamedSet("Image security scans")
+		// for _, dockerImage := range images.SourcegraphDockerImages {
+		// 	imageScanOps.Append(trivyScanCandidateImage(dockerImage, c.candidateImageTag()))
+		// }
+		// ops.Merge(imageScanOps)
 
 		// Core tests
-		ops.Merge(CoreTestOperations(changed.All, CoreTestOperationsOptions{
-			ChromaticShouldAutoAccept: c.RunType.Is(runtype.MainBranch),
-			MinimumUpgradeableVersion: minimumUpgradeableVersion,
-			ForceReadyForReview:       c.MessageFlags.ForceReadyForReview,
-			CacheBundleSize:           c.RunType.Is(runtype.MainBranch, runtype.MainDryRun),
-		}))
+		// ops.Merge(CoreTestOperations(changed.All, CoreTestOperationsOptions{
+		// 	ChromaticShouldAutoAccept: c.RunType.Is(runtype.MainBranch),
+		// 	MinimumUpgradeableVersion: minimumUpgradeableVersion,
+		// 	ForceReadyForReview:       c.MessageFlags.ForceReadyForReview,
+		// 	CacheBundleSize:           c.RunType.Is(runtype.MainBranch, runtype.MainDryRun),
+		// }))
 
 		// Integration tests
-		ops.Merge(operations.NewNamedSet("Integration tests",
-			backendIntegrationTests(c.candidateImageTag()),
-			codeIntelQA(c.candidateImageTag()),
-		))
+		// ops.Merge(operations.NewNamedSet("Integration tests",
+		// 	backendIntegrationTests(c.candidateImageTag()),
+		// 	codeIntelQA(c.candidateImageTag()),
+		// ))
 		// End-to-end tests
 		ops.Merge(operations.NewNamedSet("End-to-end tests",
 			serverE2E(c.candidateImageTag()),
-			serverQA(c.candidateImageTag()),
-			clusterQA(c.candidateImageTag()),
-			testUpgrade(c.candidateImageTag(), minimumUpgradeableVersion),
+			// serverQA(c.candidateImageTag()),
+			// clusterQA(c.candidateImageTag()),
+			// testUpgrade(c.candidateImageTag(), minimumUpgradeableVersion),
 		))
 
 		// All operations before this point are required

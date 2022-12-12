@@ -28,8 +28,7 @@ describe('Site Admin', () => {
     afterEachSaveScreenshotIfFailed(() => driver.page)
     afterEachRecordCoverage(() => driver)
 
-    // Flaky https://github.com/sourcegraph/sourcegraph/issues/45531
-    test.skip('Overview', async () => {
+    test('Overview', async () => {
         await driver.page.goto(sourcegraphBaseUrl + '/site-admin')
         await driver.page.waitForSelector('[data-testid="product-certificate"', { visible: true })
     })

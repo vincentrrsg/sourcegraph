@@ -627,6 +627,7 @@ func serverE2E(candidateTag string) operations.Operation {
 		p.AddStep(":chromium: Sourcegraph E2E",
 			// Run tests against the candidate server image
 			bk.DependsOn(candidateImageStepKey("server")),
+			bk.Parallelism(10),
 			bk.Env("CANDIDATE_VERSION", candidateTag),
 			bk.Env("DISPLAY", ":99"),
 			bk.Env("SOURCEGRAPH_BASE_URL", "http://127.0.0.1:7080"),

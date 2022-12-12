@@ -8,8 +8,10 @@ import (
 	"github.com/derision-test/glock"
 	"github.com/sourcegraph/log"
 
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/autoindexing/internal/store"
 	"github.com/sourcegraph/sourcegraph/internal/gitserver/gitdomain"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
+	"github.com/sourcegraph/sourcegraph/internal/observation"
 	"github.com/sourcegraph/sourcegraph/lib/errors"
 )
 
@@ -22,31 +24,38 @@ type JanitorConfig struct {
 }
 
 type janitorJob struct {
-	autoindexingSvc AutoIndexingService
+	store           store.Store
 	gitserverClient GitserverClient
-	metrics         janitorMetrics
+	metrics         *janitorMetrics
 	logger          log.Logger
 	clock           glock.Clock
 }
 
 func NewJanitor(
+	observationCtx *observation.Context,
 	interval time.Duration,
-	autoindexingSvc AutoIndexingService,
+	store store.Store,
 	gitserverClient GitserverClient,
 	clock glock.Clock,
 	config JanitorConfig,
 ) goroutine.BackgroundRoutine {
-	return goroutine.NewPeriodicGoroutine(context.Background(), interval, goroutine.HandlerFunc(func(ctx context.Context) error {
-		job := janitorJob{
-			autoindexingSvc: autoindexingSvc,
-			gitserverClient: gitserverClient,
-			metrics:         janitorMetrics{},
-			logger:          log.Scoped("codeintel.janitor.background", ""),
-			clock:           clock,
-		}
+	metrics := NewJanitorMetrics(observationCtx)
+	return goroutine.NewPeriodicGoroutine(
+		context.Background(),
+		"codeintel.autoindexing-janitor", "cleanup autoindexing jobs for unknown repos, commits etc",
+		interval,
+		goroutine.HandlerFunc(func(ctx context.Context) error {
+			job := janitorJob{
+				store:           store,
+				gitserverClient: gitserverClient,
+				metrics:         metrics,
+				logger:          log.Scoped("codeintel.janitor.background", ""),
+				clock:           clock,
+			}
 
-		return job.handleCleanup(ctx, config)
-	}))
+			return job.handleCleanup(ctx, config)
+		}),
+	)
 }
 
 func (j janitorJob) handleCleanup(ctx context.Context, cfg JanitorConfig) (errs error) {
@@ -67,7 +76,7 @@ func (j janitorJob) handleCleanup(ctx context.Context, cfg JanitorConfig) (errs 
 }
 
 func (j janitorJob) handleDeletedRepository(ctx context.Context) (err error) {
-	indexesCounts, err := j.autoindexingSvc.DeleteIndexesWithoutRepository(ctx, time.Now())
+	indexesCounts, err := j.store.DeleteIndexesWithoutRepository(ctx, time.Now())
 	if err != nil {
 		return errors.Wrap(err, "autoindexingSvc.DeleteIndexesWithoutRepository")
 	}
@@ -114,7 +123,7 @@ func gatherCounts(indexesCounts map[int]int) []recordCount {
 }
 
 func (j janitorJob) handleUnknownCommit(ctx context.Context, cfg JanitorConfig) (err error) {
-	indexesDeleted, err := j.autoindexingSvc.ProcessStaleSourcedCommits(
+	indexesDeleted, err := j.store.ProcessStaleSourcedCommits(
 		ctx,
 		cfg.MinimumTimeSinceLastCheck,
 		cfg.CommitResolverBatchSize,
@@ -132,7 +141,7 @@ func (j janitorJob) handleUnknownCommit(ctx context.Context, cfg JanitorConfig) 
 }
 
 func (j janitorJob) handleExpiredRecords(ctx context.Context, cfg JanitorConfig) error {
-	return j.autoindexingSvc.ExpireFailedRecords(ctx, cfg.FailedIndexBatchSize, cfg.FailedIndexMaxAge, j.clock.Now())
+	return j.store.ExpireFailedRecords(ctx, cfg.FailedIndexBatchSize, cfg.FailedIndexMaxAge, j.clock.Now())
 }
 
 func (j janitorJob) shouldDeleteUploadsForCommit(ctx context.Context, repositoryID int, commit string) (bool, error) {

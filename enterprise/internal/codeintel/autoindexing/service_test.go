@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/grafana/regexp"
 
+	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/autoindexing/internal/jobselector"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/autoindexing/shared"
 	types "github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/shared/types"
 	"github.com/sourcegraph/sourcegraph/internal/api"
@@ -19,7 +20,7 @@ import (
 )
 
 func init() {
-	maximumIndexJobsPerInferredConfiguration = 50
+	jobselector.MaximumIndexJobsPerInferredConfiguration = 50
 }
 
 func TestQueueIndexesExplicit(t *testing.T) {
@@ -65,13 +66,13 @@ func TestQueueIndexesExplicit(t *testing.T) {
 	inferenceService := NewMockInferenceService()
 
 	service := newService(
+		&observation.TestContext,
 		mockDBStore,
 		mockUploadSvc,
 		inferenceService,
 		nil, // repoUpdater
 		mockGitserverClient,
 		nil, // symbolsClient
-		&observation.TestContext,
 	)
 	_, _ = service.QueueIndexes(context.Background(), 42, "HEAD", config, false, false)
 
@@ -183,13 +184,13 @@ func TestQueueIndexesInDatabase(t *testing.T) {
 	inferenceService := NewMockInferenceService()
 
 	service := newService(
+		&observation.TestContext,
 		mockDBStore,
 		mockUploadSvc,
 		inferenceService,
 		nil, // repoUpdater
 		mockGitserverClient,
 		nil, // symbolsClient
-		&observation.TestContext,
 	)
 	_, _ = service.QueueIndexes(context.Background(), 42, "HEAD", "", false, false)
 
@@ -306,13 +307,13 @@ func TestQueueIndexesInRepository(t *testing.T) {
 	inferenceService := NewMockInferenceService()
 
 	service := newService(
+		&observation.TestContext,
 		mockDBStore,
 		mockUploadSvc,
 		inferenceService,
 		nil, // repoUpdater
 		mockGitserverClient,
 		nil, // symbolsClient
-		&observation.TestContext,
 	)
 
 	if _, err := service.QueueIndexes(context.Background(), 42, "HEAD", "", false, false); err != nil {
@@ -412,13 +413,13 @@ func TestQueueIndexesInferred(t *testing.T) {
 	})
 
 	service := newService(
+		&observation.TestContext,
 		mockDBStore,
 		mockUploadSvc,
 		inferenceService,
 		nil, // repoUpdater
 		mockGitserverClient,
 		nil, // symbolsClient
-		&observation.TestContext,
 	)
 
 	for _, id := range []int{41, 42, 43, 44} {
@@ -458,7 +459,7 @@ func TestQueueIndexesInferred(t *testing.T) {
 }
 
 func TestQueueIndexesInferredTooLarge(t *testing.T) {
-	maximumIndexJobsPerInferredConfiguration = 20
+	jobselector.MaximumIndexJobsPerInferredConfiguration = 20
 
 	mockDBStore := NewMockStore()
 	mockDBStore.InsertIndexesFunc.SetDefaultHook(func(ctx context.Context, indexes []types.Index) ([]types.Index, error) { return indexes, nil })
@@ -483,13 +484,13 @@ func TestQueueIndexesInferredTooLarge(t *testing.T) {
 	inferenceService := NewMockInferenceService()
 
 	service := newService(
+		&observation.TestContext,
 		mockDBStore,
 		mockUploadSvc,
 		inferenceService,
 		nil, // repoUpdater
 		mockGitserverClient,
 		nil, //
-		&observation.TestContext,
 	)
 
 	if _, err := service.QueueIndexes(context.Background(), 42, "HEAD", "", false, false); err != nil {
@@ -544,13 +545,13 @@ func TestQueueIndexesForPackage(t *testing.T) {
 	})
 
 	service := newService(
+		&observation.TestContext,
 		mockDBStore,
 		mockUploadSvc,
 		inferenceService,
 		mockRepoUpdater, // repoUpdater
 		mockGitserverClient,
 		nil, //
-		&observation.TestContext,
 	)
 
 	_ = service.QueueIndexesForPackage(context.Background(), precise.Package{

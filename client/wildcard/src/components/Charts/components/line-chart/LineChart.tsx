@@ -1,4 +1,4 @@
-import { ReactElement, useMemo, SVGProps, CSSProperties } from 'react'
+import { ReactElement, useMemo, SVGProps, CSSProperties, useCallback } from 'react'
 
 import { scaleTime, scaleLinear, getTicks } from '@visx/scale'
 import { AnyD3Scale } from '@visx/scale/lib/types/Scale'
@@ -6,10 +6,12 @@ import { ScaleLinear, ScaleTime } from 'd3-scale'
 import { timeFormat } from 'd3-time-format'
 import { noop } from 'lodash'
 
+import { Padding } from '../../../Popover'
 import { SvgAxisBottom, SvgAxisLeft, SvgContent, SvgRoot } from '../../core'
 import { Series, SeriesLikeChart } from '../../types'
 
 import { LineChartContent } from './LineChartContent'
+import { Point } from './types'
 import { getSeriesData, getMinMaxBoundaries } from './utils'
 
 /**
@@ -66,9 +68,13 @@ export interface LineChartProps<Datum> extends SeriesLikeChart<Datum>, SVGProps<
      * @returns a SeriesWithData array that has been filtered
      */
     getActiveSeries?: <S extends Pick<Series<Datum>, 'id'>>(dataSeries: S[]) => S[]
+
+    /** Visual content padding for the SVG element */
+    padding?: Padding
 }
 
 const identity = <T,>(argument: T): T => argument
+const DEFAULT_LINE_CHART_PADDING = { top: 16, right: 18, bottom: 0, left: 0 }
 
 /**
  * Visual component that renders svg line chart with pre-defined sizes, tooltip,
@@ -85,15 +91,16 @@ export function LineChart<D>(props: LineChartProps<D>): ReactElement | null {
         getLineGroupStyle,
         getActiveSeries = identity,
         onDatumClick = noop,
+        padding = DEFAULT_LINE_CHART_PADDING,
         ...attributes
     } = props
 
     const dataSeries = useMemo(() => getSeriesData({ series, stacked }), [series, stacked])
 
-    const { minX, maxX, minY, maxY } = useMemo(() => getMinMaxBoundaries({ dataSeries, zeroYAxisMin }), [
-        dataSeries,
-        zeroYAxisMin,
-    ])
+    const { minX, maxX, minY, maxY } = useMemo(
+        () => getMinMaxBoundaries({ dataSeries, zeroYAxisMin }),
+        [dataSeries, zeroYAxisMin]
+    )
 
     const xScale = useMemo(
         () =>
@@ -115,12 +122,33 @@ export function LineChart<D>(props: LineChartProps<D>): ReactElement | null {
         [minY, maxY]
     )
 
+    const handleDatumAreaClick = useCallback(
+        (point?: Point) => {
+            // Since click has been fired not by native link but by a click in the
+            // link area, we should synthetically trigger the link behavior
+            if (point?.linkUrl) {
+                window.open(point.linkUrl)
+            }
+
+            onDatumClick(point)
+        },
+        [onDatumClick]
+    )
+
     return (
-        <SvgRoot {...attributes} width={width} height={height} xScale={xScale} yScale={yScale} role="group">
+        <SvgRoot
+            {...attributes}
+            role="group"
+            width={width}
+            height={height}
+            xScale={xScale}
+            yScale={yScale}
+            padding={padding}
+        >
             <SvgAxisLeft />
 
             <SvgAxisBottom
-                pixelsPerTick={60}
+                pixelsPerTick={70}
                 minRotateAngle={20}
                 maxRotateAngle={60}
                 tickFormat={formatDateTick}
@@ -142,6 +170,7 @@ export function LineChart<D>(props: LineChartProps<D>): ReactElement | null {
                         getActiveSeries={getActiveSeries}
                         getLineGroupStyle={getLineGroupStyle}
                         onDatumClick={onDatumClick}
+                        onDatumAreaClick={handleDatumAreaClick}
                     />
                 )}
             </SvgContent>

@@ -13,9 +13,8 @@ import { ThemeProps } from '@sourcegraph/shared/src/theme'
 
 import { parseSearchURLQuery } from '..'
 import { AuthenticatedUser } from '../../auth'
-import { useFeatureFlag } from '../../featureFlags/useFeatureFlag'
 import { useExperimentalFeatures, useNavbarQueryState, setSearchCaseSensitivity } from '../../stores'
-import { NavbarQueryState, setSearchPatternType } from '../../stores/navbarSearchQueryState'
+import { NavbarQueryState, setSearchMode, setSearchPatternType } from '../../stores/navbarSearchQueryState'
 
 import { useRecentSearches } from './useRecentSearches'
 
@@ -40,10 +39,11 @@ const selectQueryState = ({
     submitSearch,
     searchCaseSensitivity,
     searchPatternType,
+    searchMode,
 }: NavbarQueryState): Pick<
     NavbarQueryState,
-    'queryState' | 'setQueryState' | 'submitSearch' | 'searchCaseSensitivity' | 'searchPatternType'
-> => ({ queryState, setQueryState, submitSearch, searchCaseSensitivity, searchPatternType })
+    'queryState' | 'setQueryState' | 'submitSearch' | 'searchCaseSensitivity' | 'searchPatternType' | 'searchMode'
+> => ({ queryState, setQueryState, submitSearch, searchCaseSensitivity, searchPatternType, searchMode })
 
 /**
  * The search item in the navbar
@@ -52,20 +52,16 @@ export const SearchNavbarItem: React.FunctionComponent<React.PropsWithChildren<P
     const isSearchPage = props.location.pathname === '/search' && Boolean(parseSearchURLQuery(props.location.search))
     // This uses the same logic as in Layout.tsx until we have a better solution
     // or remove the search help button
-    const { queryState, setQueryState, submitSearch, searchCaseSensitivity, searchPatternType } = useNavbarQueryState(
-        selectQueryState,
-        shallow
-    )
+
+    const { queryState, setQueryState, submitSearch, searchCaseSensitivity, searchPatternType, searchMode } =
+        useNavbarQueryState(selectQueryState, shallow)
+
     const showSearchContext = useExperimentalFeatures(features => features.showSearchContext ?? false)
-    const showSearchContextManagement = useExperimentalFeatures(
-        features => features.showSearchContextManagement ?? false
-    )
     const editorComponent = useExperimentalFeatures(features => features.editor ?? 'codemirror6')
     const applySuggestionsOnEnter =
         useExperimentalFeatures(features => features.applySearchQuerySuggestionOnEnter) ?? true
 
-    const [showSearchHistory] = useFeatureFlag('search-input-show-history')
-    const { recentSearches, addRecentSearch } = useRecentSearches()
+    const { recentSearches } = useRecentSearches()
 
     const submitSearchOnChange = useCallback(
         (parameters: Partial<SubmitSearchParameters> = {}) => {
@@ -73,11 +69,10 @@ export const SearchNavbarItem: React.FunctionComponent<React.PropsWithChildren<P
                 history: props.history,
                 source: 'nav',
                 selectedSearchContextSpec: props.selectedSearchContextSpec,
-                addRecentSearch,
                 ...parameters,
             })
         },
-        [submitSearch, props.history, props.selectedSearchContextSpec, addRecentSearch]
+        [submitSearch, props.history, props.selectedSearchContextSpec]
     )
 
     const onSubmit = useCallback(
@@ -99,11 +94,13 @@ export const SearchNavbarItem: React.FunctionComponent<React.PropsWithChildren<P
                 editorComponent={editorComponent}
                 applySuggestionsOnEnter={applySuggestionsOnEnter}
                 showSearchContext={showSearchContext}
-                showSearchContextManagement={showSearchContextManagement}
+                showSearchContextManagement={true}
                 caseSensitive={searchCaseSensitivity}
                 setCaseSensitivity={setSearchCaseSensitivity}
                 patternType={searchPatternType}
                 setPatternType={setSearchPatternType}
+                searchMode={searchMode}
+                setSearchMode={setSearchMode}
                 queryState={queryState}
                 onChange={setQueryState}
                 onSubmit={onSubmit}
@@ -112,7 +109,7 @@ export const SearchNavbarItem: React.FunctionComponent<React.PropsWithChildren<P
                 isExternalServicesUserModeAll={window.context.externalServicesUserMode === 'all'}
                 structuralSearchDisabled={window.context?.experimentalFeatures?.structuralSearch === 'disabled'}
                 hideHelpButton={isSearchPage}
-                showSearchHistory={showSearchHistory}
+                showSearchHistory={true}
                 recentSearches={recentSearches}
             />
         </Form>

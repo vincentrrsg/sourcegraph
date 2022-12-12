@@ -3,7 +3,7 @@ export { Button, ButtonGroup, BUTTON_SIZES } from './Button'
 export type { ButtonGroupProps } from './Button'
 export { Alert, AlertLink } from './Alert'
 export { Container } from './Container'
-export { LineChart, BarChart, PieChart, LegendList, LegendItem, ScrollBox, ParentSize } from './Charts'
+export { LineChart, BarChart, PieChart, LegendList, LegendItem, LegendItemPoint, ScrollBox, ParentSize } from './Charts'
 export {
     Checkbox,
     FlexTextArea,
@@ -19,6 +19,7 @@ export { Grid } from './Grid'
 export { LoadingSpinner } from './LoadingSpinner'
 export { PageHeader } from './PageHeader'
 export { PageSelector } from './PageSelector'
+export { PageSwitcher } from './PageSwitcher'
 export { Tabs, Tab, TabList, TabPanel, TabPanels, useTabsContext } from './Tabs'
 export { SourcegraphIcon } from './SourcegraphIcon'
 export { Badge, ProductStatusBadge, BADGE_VARIANTS, PRODUCT_STATUSES } from './Badge'

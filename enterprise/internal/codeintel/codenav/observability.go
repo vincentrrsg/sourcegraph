@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sourcegraph/log"
 
 	"github.com/sourcegraph/sourcegraph/internal/metrics"
@@ -22,55 +21,27 @@ type operations struct {
 	getStencil             *observation.Operation
 	getDumpsByIDs          *observation.Operation
 	getClosestDumpsForBlob *observation.Operation
-
-	numUploadsRead         prometheus.Counter
-	numBytesUploaded       prometheus.Counter
-	numStaleRecordsDeleted prometheus.Counter
-	numBytesDeleted        prometheus.Counter
 }
 
-func newOperations(observationContext *observation.Context) *operations {
-	metrics := metrics.NewREDMetrics(
-		observationContext.Registerer,
-		"codeintel_codenav",
-		metrics.WithLabels("op"),
-		metrics.WithCountHelp("Total number of method invocations."),
-	)
+var m = new(metrics.SingletonREDMetrics)
+
+func newOperations(observationCtx *observation.Context) *operations {
+	metrics := m.Get(func() *metrics.REDMetrics {
+		return metrics.NewREDMetrics(
+			observationCtx.Registerer,
+			"codeintel_codenav",
+			metrics.WithLabels("op"),
+			metrics.WithCountHelp("Total number of method invocations."),
+		)
+	})
 
 	op := func(name string) *observation.Operation {
-		return observationContext.Operation(observation.Op{
+		return observationCtx.Operation(observation.Op{
 			Name:              fmt.Sprintf("codeintel.codenav.%s", name),
 			MetricLabelValues: []string{name},
 			Metrics:           metrics,
 		})
 	}
-
-	counter := func(name, help string) prometheus.Counter {
-		counter := prometheus.NewCounter(prometheus.CounterOpts{
-			Name: name,
-			Help: help,
-		})
-
-		observationContext.Registerer.MustRegister(counter)
-		return counter
-	}
-
-	numUploadsRead := counter(
-		"src_codeintel_codenav_ranking_uploads_read_total",
-		"The number of upload records read.",
-	)
-	numBytesUploaded := counter(
-		"src_codeintel_codenav_ranking_bytes_uploaded_total",
-		"The number of bytes uploaded to GCS.",
-	)
-	numStaleRecordsDeleted := counter(
-		"src_codeintel_codenav_ranking_stale_uploads_removed_total",
-		"The number of stale upload records removed from GCS.",
-	)
-	numBytesDeleted := counter(
-		"src_codeintel_codenav_ranking_bytes_deleted_total",
-		"The number of bytes deleted from GCS.",
-	)
 
 	return &operations{
 		getReferences:          op("getReferences"),
@@ -82,11 +53,6 @@ func newOperations(observationContext *observation.Context) *operations {
 		getStencil:             op("getStencil"),
 		getDumpsByIDs:          op("GetDumpsByIDs"),
 		getClosestDumpsForBlob: op("GetClosestDumpsForBlob"),
-
-		numUploadsRead:         numUploadsRead,
-		numBytesUploaded:       numBytesUploaded,
-		numStaleRecordsDeleted: numStaleRecordsDeleted,
-		numBytesDeleted:        numBytesDeleted,
 	}
 }
 

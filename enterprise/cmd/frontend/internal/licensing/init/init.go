@@ -28,11 +28,11 @@ import (
 // TODO(efritz) - refactor licensing packages - this is a huge mess!
 func Init(
 	ctx context.Context,
+	observationCtx *observation.Context,
 	db database.DB,
 	codeIntelServices codeintel.Services,
 	conf conftypes.UnifiedWatchable,
 	enterpriseServices *enterprise.Services,
-	observationContext *observation.Context,
 ) error {
 	// Enforce the license's max user count by preventing the creation of new users when the max is
 	// reached.
@@ -42,7 +42,7 @@ func Init(
 	database.AfterCreateUser = enforcement.NewAfterCreateUserHook()
 	// Uncomment this when the licensing for this feature should be enforced.
 	// See https://github.com/sourcegraph/sourcegraph/issues/42527 for more context.
-	//database.BeforeSetUserIsSiteAdmin = enforcement.NewBeforeSetUserIsSiteAdmin()
+	// database.BeforeSetUserIsSiteAdmin = enforcement.NewBeforeSetUserIsSiteAdmin()
 
 	// Enforce the license's max external service count by preventing the creation of new external
 	// services when the max is reached.
@@ -154,5 +154,10 @@ type usersStore struct {
 }
 
 func (u *usersStore) Count(ctx context.Context) (int, error) {
-	return u.db.Users().Count(ctx, nil)
+	return u.db.Users().Count(
+		ctx,
+		&database.UsersListOptions{
+			ExcludeSourcegraphOperators: true,
+		},
+	)
 }

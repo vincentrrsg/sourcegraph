@@ -9,7 +9,6 @@ import (
 
 	"github.com/derision-test/glock"
 	"github.com/google/go-cmp/cmp"
-
 	"github.com/sourcegraph/log/logtest"
 
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/codeintel/uploads/shared"
@@ -98,11 +97,12 @@ func testUnknownCommitsJanitor(t *testing.T, resolveRevisionFunc func(commit str
 		return api.CommitID(spec), resolveRevisionFunc(spec)
 	})
 
-	mockUploadSvc := NewMockUploadService()
+	mockUploadSvc := NewMockStore()
 	mockUploadSvc.GetStaleSourcedCommitsFunc.SetDefaultReturn(testSourcedCommits, nil)
 
 	janitor := janitorJob{
-		uploadSvc:       mockUploadSvc,
+		store:           mockUploadSvc,
+		lsifStore:       NewMockLsifStore(),
 		logger:          logtest.Scoped(t),
 		metrics:         NewJanitorMetrics(&observation.TestContext),
 		clock:           glock.NewRealClock(),
@@ -114,6 +114,7 @@ func testUnknownCommitsJanitor(t *testing.T, resolveRevisionFunc func(commit str
 			MinimumTimeSinceLastCheck:      1 * time.Hour,
 			CommitResolverBatchSize:        10,
 			AuditLogMaxAge:                 1 * time.Hour,
+			UnreferencedDocumentMaxAge:     1 * time.Hour,
 			CommitResolverMaximumCommitLag: 1 * time.Hour,
 			UploadTimeout:                  1 * time.Hour,
 		}); err != nil {

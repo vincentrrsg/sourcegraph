@@ -174,7 +174,7 @@ var (
 sg migration up
 
 # Migrate specific database down one migration
-sg migration down --db codeintel
+sg migration downto --db codeintel --target <version>
 
 # Add new migration for specific database
 sg migration add --db codeintel 'add missing index'
@@ -225,7 +225,7 @@ func makeRunnerWithSchemas(ctx context.Context, schemaNames []string, schemas []
 	}
 
 	storeFactory := func(db *sql.DB, migrationsTable string) connections.Store {
-		return connections.NewStoreShim(store.NewWithDB(db, migrationsTable, store.NewOperations(&observation.TestContext)))
+		return connections.NewStoreShim(store.NewWithDB(&observation.TestContext, db, migrationsTable))
 	}
 	r, err := connections.RunnerFromDSNsWithSchemas(logger, postgresdsn.RawDSNsBySchema(schemaNames, getEnv), "sg", storeFactory, schemas)
 	if err != nil {

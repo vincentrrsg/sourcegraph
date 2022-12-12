@@ -5,17 +5,19 @@ import (
 	"time"
 
 	"github.com/keegancsmith/sqlf"
-	"github.com/sourcegraph/log"
 
 	"github.com/sourcegraph/sourcegraph/cmd/worker/job"
 	workerdb "github.com/sourcegraph/sourcegraph/cmd/worker/shared/init/db"
 	"github.com/sourcegraph/sourcegraph/enterprise/cmd/frontend/internal/auth/sourcegraphoperator"
 	"github.com/sourcegraph/sourcegraph/enterprise/internal/cloud"
+	"github.com/sourcegraph/sourcegraph/internal/actor"
+	"github.com/sourcegraph/sourcegraph/internal/auth"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 	"github.com/sourcegraph/sourcegraph/internal/database/basestore"
 	"github.com/sourcegraph/sourcegraph/internal/env"
 	"github.com/sourcegraph/sourcegraph/internal/errcode"
 	"github.com/sourcegraph/sourcegraph/internal/goroutine"
+	"github.com/sourcegraph/sourcegraph/internal/observation"
 	"github.com/sourcegraph/sourcegraph/lib/errors"
 )
 
@@ -37,13 +39,13 @@ func (j *sourcegraphOperatorCleaner) Config() []env.Config {
 	return nil
 }
 
-func (j *sourcegraphOperatorCleaner) Routines(_ context.Context, logger log.Logger) ([]goroutine.BackgroundRoutine, error) {
+func (j *sourcegraphOperatorCleaner) Routines(_ context.Context, observationCtx *observation.Context) ([]goroutine.BackgroundRoutine, error) {
 	cloudSiteConfig := cloud.SiteConfig()
 	if !cloudSiteConfig.SourcegraphOperatorAuthProviderEnabled() {
 		return nil, nil
 	}
 
-	db, err := workerdb.InitDBWithLogger(logger)
+	db, err := workerdb.InitDB(observationCtx)
 	if err != nil {
 		return nil, errors.Wrap(err, "init DB")
 	}
@@ -51,6 +53,8 @@ func (j *sourcegraphOperatorCleaner) Routines(_ context.Context, logger log.Logg
 	return []goroutine.BackgroundRoutine{
 		goroutine.NewPeriodicGoroutine(
 			context.Background(),
+			"auth.expired-soap-cleaner",
+			"deletes expired SOAP operator user accounts",
 			time.Minute,
 			&sourcegraphOperatorCleanHandler{
 				db:                db,
@@ -82,7 +86,7 @@ WHERE
 AND users.created_at <= %s
 GROUP BY user_id HAVING COUNT(*) = 1
 `,
-		sourcegraphoperator.ProviderType,
+		auth.SourcegraphOperatorProviderType,
 		time.Now().Add(-1*h.lifecycleDuration),
 	)
 	userIDs, err := basestore.ScanInt32s(h.db.QueryContext(ctx, q.Query(sqlf.PostgresBindVar), q.Args()...))
@@ -90,6 +94,13 @@ GROUP BY user_id HAVING COUNT(*) = 1
 		return errors.Wrap(err, "query user IDs")
 	}
 
+	// Help exclude Sourcegraph operator related events from analytics
+	ctx = actor.WithActor(
+		ctx,
+		&actor.Actor{
+			SourcegraphOperator: true,
+		},
+	)
 	err = h.db.Users().HardDeleteList(ctx, userIDs)
 	if err != nil && !errcode.IsNotFound(err) {
 		return errors.Wrap(err, "hard delete users")

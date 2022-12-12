@@ -1,6 +1,4 @@
 import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { assert, stub } from 'sinon'
 
 import { LineChart } from './LineChart'
 import { FLAT_SERIES } from './story/mocks'
@@ -10,7 +8,18 @@ const defaultArgs: RenderChartArgs = { series: FLAT_SERIES }
 interface RenderChartArgs {
     series: typeof FLAT_SERIES
 }
-const renderChart = ({ series }: RenderChartArgs) => render(<LineChart width={400} height={400} series={series} />)
+
+/**
+ * Test padding set 1px to the left and bottom values in order to force
+ * content sync appearance. In browser runtime this padding is calculated
+ * based on chart axes sizes. In test environment size measurement API
+ * doesn't work, we have to set padding manually in order to force chart
+ * content appearance. See SVGContent component for more context.
+ */
+const TEST_PADDING = { top: 16, right: 18, bottom: 1, left: 1 }
+
+const renderChart = ({ series }: RenderChartArgs) =>
+    render(<LineChart width={400} height={400} series={series} padding={TEST_PADDING} />)
 
 describe('LineChart', () => {
     // Non-exhaustive smoke tests to check that the chart renders correctly
@@ -53,24 +62,18 @@ describe('LineChart', () => {
 
     describe('should handle clicks', () => {
         it('on a point', () => {
-            const openStub = stub(window, 'open')
-
             renderChart(defaultArgs)
 
             // Query chart series list
             const series = screen.getByLabelText('Chart series')
-            const [firstPoint, secondPoint, thirdPoint] = within(series).getAllByRole('listitem')
+            const [firstSeries] = within(series).getAllByRole('listitem')
+            const [point00, point01, point02] = within(firstSeries).getAllByRole('listitem')
 
             // Spot checking multiple points
             // related issue https://github.com/sourcegraph/sourcegraph/issues/38304
-            userEvent.click(firstPoint)
-            userEvent.click(secondPoint)
-            userEvent.click(thirdPoint)
-
-            assert.alwaysCalledWith(openStub, 'https://google.com/search')
-            assert.calledThrice(openStub)
-
-            openStub.restore()
+            expect(point00).toHaveAttribute('href', 'https://google.com/search')
+            expect(point01).toHaveAttribute('href', 'https://google.com/search')
+            expect(point02).toHaveAttribute('href', 'https://google.com/search')
         })
     })
 })

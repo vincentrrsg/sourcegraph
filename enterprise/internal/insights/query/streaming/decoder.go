@@ -37,6 +37,33 @@ type SelectRepoResult struct {
 	Repos []itypes.MinimalRepo
 }
 
+// onProgress is the common FrontendStreamDecoder.OnProgress handler.
+func (s *StreamDecoderEvents) onProgress(progress *streamapi.Progress) {
+	if !progress.Done {
+		return
+	}
+	// Skipped elements are built progressively for a Progress update until it is Done, so
+	// we want to register its contents only once it is done.
+	for _, skipped := range progress.Skipped {
+		switch skipped.Reason {
+		case streamapi.ShardTimeout:
+			// ShardTimeout is a specific skipped event that we want to retry on. Currently
+			// we only retry on Alert events so this is why we add it there. This behaviour will
+			// be uniformised eventually.
+			s.Alerts = append(s.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
+			s.DidTimeout = true
+
+		case streamapi.BackendMissing:
+			// BackendMissing means we may be missing results due to
+			// Zoekt rolling out. We add an alert to cause a retry.
+			s.Alerts = append(s.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
+
+		default:
+			s.SkippedReasons = append(s.SkippedReasons, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
+		}
+	}
+}
+
 // TabulationDecoder will tabulate the result counts per repository.
 func TabulationDecoder() (streamhttp.FrontendStreamDecoder, *TabulationResult) {
 	tr := &TabulationResult{
@@ -57,31 +84,14 @@ func TabulationDecoder() (streamhttp.FrontendStreamDecoder, *TabulationResult) {
 	}
 
 	return streamhttp.FrontendStreamDecoder{
-		OnProgress: func(progress *streamapi.Progress) {
-			if !progress.Done {
-				return
-			}
-			// Skipped elements are built progressively for a Progress update until it is Done, so
-			// we want to register its contents only once it is done.
-			for _, skipped := range progress.Skipped {
-				// ShardTimeout is a specific skipped event that we want to retry on. Currently
-				// we only retry on Alert events so this is why we add it there. This behaviour will
-				// be uniformised eventually.
-				if skipped.Reason == streamapi.ShardTimeout {
-					tr.Alerts = append(tr.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-					tr.DidTimeout = true
-				} else {
-					tr.SkippedReasons = append(tr.SkippedReasons, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-				}
-			}
-		},
+		OnProgress: tr.onProgress,
 		OnMatches: func(matches []streamhttp.EventMatch) {
 			for _, match := range matches {
 				switch match := match.(type) {
 				case *streamhttp.EventContentMatch:
 					count := 0
-					for _, lineMatch := range match.LineMatches {
-						count += len(lineMatch.OffsetAndLengths)
+					for _, chunkMatch := range match.ChunkMatches {
+						count += len(chunkMatch.Ranges)
 					}
 					tr.TotalCount += count
 					addCount(match.Repository, match.RepositoryID, count)
@@ -135,6 +145,7 @@ func newComputeMatch(repoName string, repoID int32) *ComputeMatch {
 type ComputeTabulationResult struct {
 	StreamDecoderEvents
 	RepoCounts map[string]*ComputeMatch
+	TotalCount int
 }
 
 const capturedValueMaxLength = 100
@@ -154,24 +165,7 @@ func MatchContextComputeDecoder() (client.ComputeMatchContextStreamDecoder, *Com
 	}
 
 	return client.ComputeMatchContextStreamDecoder{
-		OnProgress: func(progress *streamapi.Progress) {
-			if !progress.Done {
-				return
-			}
-			// Skipped elements are built progressively for a Progress update until it is Done, so
-			// we want to register its contents only once it is done.
-			for _, skipped := range progress.Skipped {
-				// ShardTimeout is a specific skipped event that we want to retry on. Currently
-				// we only retry on Alert events so this is why we add it there. This behaviour will
-				// be uniformised eventually.
-				if skipped.Reason == streamapi.ShardTimeout {
-					ctr.Alerts = append(ctr.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-					ctr.DidTimeout = true
-				} else {
-					ctr.SkippedReasons = append(ctr.SkippedReasons, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-				}
-			}
-		},
+		OnProgress: ctr.onProgress,
 		OnResult: func(results []compute.MatchContext) {
 			for _, result := range results {
 				current := getRepoCounts(result)
@@ -184,6 +178,7 @@ func MatchContextComputeDecoder() (client.ComputeMatchContextStreamDecoder, *Com
 						if len(value) > capturedValueMaxLength {
 							value = value[:capturedValueMaxLength]
 						}
+						ctr.TotalCount += 1
 						current.ValueCounts[value] += 1
 					}
 				}
@@ -218,24 +213,7 @@ func ComputeTextDecoder() (client.ComputeTextExtraStreamDecoder, *ComputeTabulat
 	}
 
 	return client.ComputeTextExtraStreamDecoder{
-		OnProgress: func(progress *streamapi.Progress) {
-			if !progress.Done {
-				return
-			}
-			// Skipped elements are built progressively for a Progress update until it is Done, so
-			// we want to register its contents only once it is done.
-			for _, skipped := range progress.Skipped {
-				// ShardTimeout is a specific skipped event that we want to retry on. Currently
-				// we only retry on Alert events so this is why we add it there. This behaviour will
-				// be uniformised eventually.
-				if skipped.Reason == streamapi.ShardTimeout {
-					ctr.Alerts = append(ctr.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-					ctr.DidTimeout = true
-				} else {
-					ctr.SkippedReasons = append(ctr.SkippedReasons, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-				}
-			}
-		},
+		OnProgress: ctr.onProgress,
 		OnResult: func(results []compute.TextExtra) {
 			for _, result := range results {
 				vals := strings.Split(result.Value, "\n")
@@ -272,24 +250,7 @@ func SelectRepoDecoder() (streamhttp.FrontendStreamDecoder, *SelectRepoResult) {
 	}
 
 	return streamhttp.FrontendStreamDecoder{
-		OnProgress: func(progress *streamapi.Progress) {
-			if !progress.Done {
-				return
-			}
-			// Skipped elements are built progressively for a Progress update until it is Done, so
-			// we want to register its contents only once it is done.
-			for _, skipped := range progress.Skipped {
-				// ShardTimeout is a specific skipped event that we want to retry on. Currently
-				// we only retry on Alert events so this is why we add it there. This behaviour will
-				// be uniformised eventually.
-				if skipped.Reason == streamapi.ShardTimeout {
-					repoResult.Alerts = append(repoResult.Alerts, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-					repoResult.DidTimeout = true
-				} else {
-					repoResult.SkippedReasons = append(repoResult.SkippedReasons, fmt.Sprintf("%s: %s", skipped.Reason, skipped.Message))
-				}
-			}
-		},
+		OnProgress: repoResult.onProgress,
 		OnMatches: func(matches []streamhttp.EventMatch) {
 			for _, match := range matches {
 				switch match := match.(type) {

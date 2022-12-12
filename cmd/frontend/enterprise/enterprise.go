@@ -21,13 +21,14 @@ type Services struct {
 	// Batch Changes Services
 	BatchesGitHubWebhook            webhooks.Registerer
 	BatchesGitLabWebhook            webhooks.RegistererHandler
-	BatchesBitbucketServerWebhook   http.Handler
-	BatchesBitbucketCloudWebhook    http.Handler
+	BatchesBitbucketServerWebhook   webhooks.RegistererHandler
+	BatchesBitbucketCloudWebhook    webhooks.RegistererHandler
 	BatchesChangesFileGetHandler    http.Handler
 	BatchesChangesFileExistsHandler http.Handler
 	BatchesChangesFileUploadHandler http.Handler
 
 	GitHubSyncWebhook           webhooks.Registerer
+	PermissionsGitHubWebhook    webhooks.Registerer
 	NewCodeIntelUploadHandler   NewCodeIntelUploadHandler
 	RankingService              RankingService
 	NewExecutorProxyHandler     NewExecutorProxyHandler
@@ -74,10 +75,11 @@ type NewComputeStreamHandler func() http.Handler
 func DefaultServices() Services {
 	return Services{
 		GitHubSyncWebhook:               &emptyWebhookHandler{name: "github sync webhook"},
+		PermissionsGitHubWebhook:        &emptyWebhookHandler{name: "permissions github webhook"},
 		BatchesGitHubWebhook:            &emptyWebhookHandler{name: "batches github webhook"},
 		BatchesGitLabWebhook:            &emptyWebhookHandler{name: "batches gitlab webhook"},
-		BatchesBitbucketServerWebhook:   makeNotFoundHandler("batches bitbucket server webhook"),
-		BatchesBitbucketCloudWebhook:    makeNotFoundHandler("batches bitbucket cloud webhook"),
+		BatchesBitbucketServerWebhook:   &emptyWebhookHandler{name: "batches bitbucket server webhook"},
+		BatchesBitbucketCloudWebhook:    &emptyWebhookHandler{name: "batches bitbucket cloud webhook"},
 		BatchesChangesFileGetHandler:    makeNotFoundHandler("batches file get handler"),
 		BatchesChangesFileExistsHandler: makeNotFoundHandler("batches file exists handler"),
 		BatchesChangesFileUploadHandler: makeNotFoundHandler("batches file upload handler"),
@@ -95,12 +97,6 @@ func makeNotFoundHandler(handlerName string) http.Handler {
 		w.WriteHeader(http.StatusNotFound)
 		_, _ = w.Write([]byte(fmt.Sprintf("%s is only available in enterprise", handlerName)))
 	})
-}
-
-type registerFunc func(webhook *webhooks.WebhookRouter)
-
-func (fn registerFunc) Register(w *webhooks.WebhookRouter) {
-	fn(w)
 }
 
 type emptyWebhookHandler struct {

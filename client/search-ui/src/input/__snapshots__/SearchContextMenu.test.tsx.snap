@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SearchContextMenu should filter list by spec when searching 1`] = `
-Array [
+[
   <li
     aria-selected="false"
     class="item"

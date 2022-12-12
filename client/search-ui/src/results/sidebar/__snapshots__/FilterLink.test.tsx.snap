@@ -75,11 +75,11 @@ exports[`FilterLink should have correct links for dynamic filters 1`] = `
     </span>
   </button>
   <button
-    aria-label="-file:_test\\\\.go$, At least 1 result matches this filter."
+    aria-label="-file:_test\\.go$, At least 1 result matches this filter."
     class="btn btnLink sidebarSectionListItem"
     data-testid="filter-link"
     type="button"
-    value="-file:_test\\\\.go$"
+    value="-file:_test\\.go$"
   >
     <span
       class="flex-grow-1 sidebarSectionListItemLabel"
@@ -135,7 +135,7 @@ exports[`FilterLink should have correct links for repos 1`] = `
     class="btn btnLink sidebarSectionListItem"
     data-testid="filter-link"
     type="button"
-    value="repo:^gitlab\\\\.com/sourcegraph/sourcgreaph$"
+    value="repo:^gitlab\\.com/sourcegraph/sourcgreaph$"
   >
     <span
       class="flex-grow-1 sidebarSectionListItemLabel"
@@ -170,7 +170,7 @@ exports[`FilterLink should have correct links for repos 1`] = `
     class="btn btnLink sidebarSectionListItem"
     data-testid="filter-link"
     type="button"
-    value="repo:^github\\\\.com/microsoft/vscode$"
+    value="repo:^github\\.com/microsoft/vscode$"
   >
     <span
       class="flex-grow-1 sidebarSectionListItemLabel"
@@ -241,7 +241,7 @@ exports[`FilterLink should have show icons for repos on cloud 1`] = `
     class="btn btnLink sidebarSectionListItem"
     data-testid="filter-link"
     type="button"
-    value="repo:^gitlab\\\\.com/sourcegraph/sourcgreaph$"
+    value="repo:^gitlab\\.com/sourcegraph/sourcgreaph$"
   >
     <span
       class="flex-grow-1 sidebarSectionListItemLabel"
@@ -276,7 +276,7 @@ exports[`FilterLink should have show icons for repos on cloud 1`] = `
     class="btn btnLink sidebarSectionListItem"
     data-testid="filter-link"
     type="button"
-    value="repo:^github\\\\.com/microsoft/vscode$"
+    value="repo:^github\\.com/microsoft/vscode$"
   >
     <span
       class="flex-grow-1 sidebarSectionListItemLabel"

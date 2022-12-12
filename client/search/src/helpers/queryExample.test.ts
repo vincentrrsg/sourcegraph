@@ -6,9 +6,9 @@ describe('example helpers', () => {
     describe('createExampleFromString', () => {
         it('parses examples without placeholder', () => {
             expect(createQueryExampleFromString('foo bar')).toMatchInlineSnapshot(`
-                Object {
-                  "tokens": Array [
-                    Object {
+                {
+                  "tokens": [
+                    {
                       "end": 7,
                       "start": 0,
                       "type": "text",
@@ -22,9 +22,9 @@ describe('example helpers', () => {
 
         it('parses examples with placeholder', () => {
             expect(createQueryExampleFromString('{foo}')).toMatchInlineSnapshot(`
-                Object {
-                  "tokens": Array [
-                    Object {
+                {
+                  "tokens": [
+                    {
                       "end": 3,
                       "start": 0,
                       "type": "placeholder",
@@ -35,21 +35,21 @@ describe('example helpers', () => {
                 }
             `)
             expect(createQueryExampleFromString('({foo})')).toMatchInlineSnapshot(`
-                Object {
-                  "tokens": Array [
-                    Object {
+                {
+                  "tokens": [
+                    {
                       "end": 1,
                       "start": 0,
                       "type": "text",
                       "value": "(",
                     },
-                    Object {
+                    {
                       "end": 4,
                       "start": 1,
                       "type": "placeholder",
                       "value": "foo",
                     },
-                    Object {
+                    {
                       "end": 5,
                       "start": 4,
                       "type": "text",
@@ -68,12 +68,12 @@ describe('example helpers', () => {
                 expect(
                     updateQueryWithFilterAndExample('foo', FilterType.after, createQueryExampleFromString('({test})'))
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 16,
                         "start": 4,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 15,
                         "start": 11,
                       },
@@ -88,12 +88,12 @@ describe('example helpers', () => {
                         emptyValue: true,
                     })
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 10,
                         "start": 4,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 10,
                         "start": 10,
                       },
@@ -108,12 +108,12 @@ describe('example helpers', () => {
                         negate: true,
                     })
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 17,
                         "start": 4,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 16,
                         "start": 12,
                       },
@@ -130,12 +130,12 @@ describe('example helpers', () => {
                         singular: true,
                     })
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 16,
                         "start": 4,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 15,
                         "start": 11,
                       },
@@ -153,12 +153,12 @@ describe('example helpers', () => {
                         { singular: true }
                     )
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 11,
                         "start": 0,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 11,
                         "start": 6,
                       },
@@ -176,12 +176,12 @@ describe('example helpers', () => {
                         { singular: true, emptyValue: true }
                     )
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 6,
                         "start": 0,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 6,
                         "start": 6,
                       },
@@ -199,12 +199,12 @@ describe('example helpers', () => {
                         { singular: true, emptyValue: true }
                     )
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 6,
                         "start": 0,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 6,
                         "start": 6,
                       },
@@ -222,12 +222,12 @@ describe('example helpers', () => {
                         { singular: true, negate: true }
                     )
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 12,
                         "start": 0,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 12,
                         "start": 7,
                       },
@@ -245,12 +245,12 @@ describe('example helpers', () => {
                         { singular: true, negate: true, emptyValue: true }
                     )
                 ).toMatchInlineSnapshot(`
-                    Object {
-                      "filterRange": Object {
+                    {
+                      "filterRange": {
                         "end": 7,
                         "start": 0,
                       },
-                      "placeholderRange": Object {
+                      "placeholderRange": {
                         "end": 7,
                         "start": 7,
                       },

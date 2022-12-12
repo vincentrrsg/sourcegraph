@@ -4114,7 +4114,7 @@ Query: `round(sum(increase(src_search_ranking_result_clicked_sum{type="commit"}[
 
 #### frontend: email_delivery_failures
 
-<p class="subtitle">Email delivery failures every 30 minutes</p>
+<p class="subtitle">Email delivery failures every hour</p>
 
 Refer to the [alerts reference](./alerts.md#frontend-email-delivery-failures) for 2 alerts related to this panel.
 
@@ -4125,17 +4125,17 @@ To see this panel, visit `/-/debug/grafana/d/frontend/frontend?viewPanel=103100`
 <details>
 <summary>Technical details</summary>
 
-Query: `sum(increase(src_email_send{success="false"}[30m]))`
+Query: `sum(increase(src_email_send{success="false"}[1h]))`
 
 </details>
 
 <br />
 
-#### frontend: email_deliveries_by_source
+#### frontend: email_deliveries_total
 
-<p class="subtitle">Emails successfully delivered every 5 minutes by source</p>
+<p class="subtitle">Total emails successfully delivered every hour</p>
 
-Emails successfully delivered by source.
+Total emails successfully delivered.
 
 This panel has no related alerts.
 
@@ -4146,17 +4146,17 @@ To see this panel, visit `/-/debug/grafana/d/frontend/frontend?viewPanel=103110`
 <details>
 <summary>Technical details</summary>
 
-Query: `sum by (email_source) (increase(src_email_send{success="true"}[5m]))`
+Query: `sum (increase(src_email_send{success="true"}[1h]))`
 
 </details>
 
 <br />
 
-#### frontend: email_deliveries_total
+#### frontend: email_deliveries_by_source
 
-<p class="subtitle">Total emails successfully delivered every 5 minutes</p>
+<p class="subtitle">Emails successfully delivered every hour by source</p>
 
-Total emails successfully delivered.
+Emails successfully delivered by source, i.e. product feature.
 
 This panel has no related alerts.
 
@@ -4167,7 +4167,7 @@ To see this panel, visit `/-/debug/grafana/d/frontend/frontend?viewPanel=103111`
 <details>
 <summary>Technical details</summary>
 
-Query: `sum (increase(src_email_send{success="true"}[5m]))`
+Query: `sum by (email_source) (increase(src_email_send{success="true"}[1h]))`
 
 </details>
 

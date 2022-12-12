@@ -22,7 +22,7 @@ import (
 
 func TestGet(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 	groupByRepo := "repo"
 
@@ -282,7 +282,7 @@ func TestGet(t *testing.T) {
 
 func TestGetAll(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 	groupByRepo := "repo"
 	ctx := context.Background()
@@ -680,7 +680,7 @@ func TestGetAll(t *testing.T) {
 
 func TestGetAllOnDashboard(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 	groupByRepo := "repo"
 
@@ -962,7 +962,7 @@ func TestGetAllOnDashboard(t *testing.T) {
 
 func TestCreateSeries(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2021, 5, 1, 1, 0, 0, 0, time.UTC).Truncate(time.Microsecond).Round(0)
 	groupByRepo := "repo"
 
@@ -1058,7 +1058,7 @@ func TestCreateSeries(t *testing.T) {
 
 func TestCreateView(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 	ctx := context.Background()
 
@@ -1068,7 +1068,6 @@ func TestCreateView(t *testing.T) {
 	}
 
 	t.Run("test create view", func(t *testing.T) {
-
 		view := types.InsightView{
 			Title:            "my view",
 			Description:      "my view description",
@@ -1103,7 +1102,7 @@ func TestCreateView(t *testing.T) {
 
 func TestCreateGetView_WithGrants(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Truncate(time.Microsecond).Round(0)
 	ctx := context.Background()
 
@@ -1234,7 +1233,7 @@ func TestCreateGetView_WithGrants(t *testing.T) {
 
 func TestUpdateView(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 	ctx := context.Background()
 
@@ -1289,7 +1288,7 @@ func TestUpdateView(t *testing.T) {
 
 func TestUpdateViewSeries(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 	groupByRepo := "repo"
 	ctx := context.Background()
@@ -1351,7 +1350,7 @@ func TestUpdateViewSeries(t *testing.T) {
 
 func TestDeleteView(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Truncate(time.Microsecond).Round(0)
 	ctx := context.Background()
 
@@ -1418,7 +1417,7 @@ func TestDeleteView(t *testing.T) {
 
 func TestAttachSeriesView(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Round(0).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -1499,7 +1498,7 @@ func TestAttachSeriesView(t *testing.T) {
 
 func TestRemoveSeriesFromView(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Round(0).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -1599,7 +1598,7 @@ func TestRemoveSeriesFromView(t *testing.T) {
 
 func TestInsightStore_GetDataSeries(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Round(0).Truncate(time.Microsecond)
 	groupByRepo := "repo"
 	ctx := context.Background()
@@ -1684,7 +1683,7 @@ func TestInsightStore_GetDataSeries(t *testing.T) {
 
 func TestInsightStore_StampRecording(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2020, 1, 5, 0, 0, 0, 0, time.UTC).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -1728,7 +1727,7 @@ func TestInsightStore_StampRecording(t *testing.T) {
 
 func TestInsightStore_StampBackfillQueued(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Round(0).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -1786,7 +1785,7 @@ func TestInsightStore_StampBackfillQueued(t *testing.T) {
 
 func TestInsightStore_StampBackfillCompleted(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Round(0).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -1844,7 +1843,7 @@ func TestInsightStore_StampBackfillCompleted(t *testing.T) {
 
 func TestSetSeriesEnabled(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2021, 10, 14, 0, 0, 0, 0, time.UTC).Round(0).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -1909,7 +1908,7 @@ func TestSetSeriesEnabled(t *testing.T) {
 
 func TestFindMatchingSeries(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2021, 10, 14, 0, 0, 0, 0, time.UTC).Round(0).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -1982,7 +1981,7 @@ func TestFindMatchingSeries(t *testing.T) {
 
 func TestUpdateFrontendSeries(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2021, 10, 14, 0, 0, 0, 0, time.UTC).Round(0).Truncate(time.Microsecond)
 	ctx := context.Background()
 
@@ -2065,7 +2064,7 @@ func TestUpdateFrontendSeries(t *testing.T) {
 
 func TestGetReferenceCount(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 
 	store := NewInsightStore(insightsDB)
@@ -2123,7 +2122,7 @@ func TestGetReferenceCount(t *testing.T) {
 
 func TestGetSoftDeletedSeries(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC).Truncate(time.Microsecond).Round(0)
 	ctx := context.Background()
 
@@ -2164,7 +2163,7 @@ func TestGetSoftDeletedSeries(t *testing.T) {
 
 func TestGetUnfrozenInsightCount(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	store := NewInsightStore(insightsDB)
 	ctx := context.Background()
 
@@ -2237,7 +2236,7 @@ func TestGetUnfrozenInsightCount(t *testing.T) {
 
 func TestUnfreezeGlobalInsights(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	store := NewInsightStore(insightsDB)
 	ctx := context.Background()
 
@@ -2327,7 +2326,7 @@ func TestUnfreezeGlobalInsights(t *testing.T) {
 
 func TestIncrementBackfillAttempts(t *testing.T) {
 	logger := logtest.Scoped(t)
-	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsDB := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 	now := time.Now().Truncate(time.Microsecond).Round(0)
 
 	_, err := insightsDB.ExecContext(context.Background(), `INSERT INTO insight_view (id, title, description, unique_id, is_frozen)
@@ -2393,7 +2392,6 @@ func TestIncrementBackfillAttempts(t *testing.T) {
 
 			got := series[0].BackfillAttempts
 			tc.want.Equal(t, got)
-
 		})
 	}
 }
@@ -2408,7 +2406,7 @@ func TestHardDeleteSeries(t *testing.T) {
 	logger := logtest.Scoped(t)
 	ctx := context.Background()
 	clock := timeutil.Now
-	insightsdb := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t))
+	insightsdb := edb.NewInsightsDB(dbtest.NewInsightsDB(logger, t), logger)
 
 	postgres := database.NewDB(logger, dbtest.NewDB(logger, t))
 	permStore := NewInsightPermissionStore(postgres)

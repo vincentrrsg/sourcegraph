@@ -2,12 +2,12 @@ package monitoring
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/grafana-tools/sdk"
+	"github.com/grafana/regexp"
 	"github.com/prometheus/prometheus/model/labels"
 
 	"github.com/sourcegraph/sourcegraph/lib/errors"
@@ -102,17 +102,8 @@ func (c *Dashboard) renderDashboard(injectLabelMatchers []*labels.Matcher, folde
 	if folder != "" {
 		uid = fmt.Sprintf("%s-%s", folder, uid)
 	}
+	board := grafana.NewBoard(uid, c.Title, []string{"builtin"})
 
-	board := sdk.NewBoard(c.Title)
-	board.UID = uid
-	board.ID = 0
-	board.Timezone = "utc"
-	board.Timepicker.RefreshIntervals = []string{"5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"}
-	board.Time.From = "now-6h"
-	board.Time.To = "now"
-	board.SharedCrosshair = true
-	board.Editable = false
-	board.AddTags("builtin")
 	if !c.noAlertsDefined() {
 		alertLevelVariable := ContainerVariable{
 			Label: "Alert level",
@@ -271,14 +262,9 @@ func (c *Dashboard) renderDashboard(injectLabelMatchers []*labels.Matcher, folde
 		// Non-general groups are shown as collapsible panels.
 		var rowPanel *sdk.Panel
 		if group.Title != "General" {
-			rowPanel = &sdk.Panel{RowPanel: &sdk.RowPanel{}}
-			rowPanel.OfType = sdk.RowType
-			rowPanel.Type = "row"
-			rowPanel.Title = group.Title
 			offsetY++
-			setPanelPos(rowPanel, 0, offsetY)
+			rowPanel = grafana.NewRowPanel(offsetY, group.Title)
 			rowPanel.Collapsed = group.Hidden
-			rowPanel.Panels = []sdk.Panel{} // cannot be null
 			board.Panels = append(board.Panels, rowPanel)
 		}
 
@@ -290,11 +276,12 @@ func (c *Dashboard) renderDashboard(injectLabelMatchers []*labels.Matcher, folde
 				panel, err := o.renderPanel(c, panelManipulationOptions{
 					injectLabelMatchers: injectLabelMatchers,
 				}, &panelRenderOptions{
-					groupIndex: groupIndex,
-					rowIndex:   rowIndex,
-					panelIndex: panelIndex,
-					panelWidth: panelWidth,
-					offsetY:    offsetY,
+					groupIndex:  groupIndex,
+					rowIndex:    rowIndex,
+					panelIndex:  panelIndex,
+					panelWidth:  panelWidth,
+					panelHeight: 5,
+					offsetY:     offsetY,
 				})
 				if err != nil {
 					return nil, errors.Wrapf(err, "render panel for %q", o.Name)
@@ -774,10 +761,11 @@ func (o Observable) alertsCount() (count int) {
 }
 
 type panelRenderOptions struct {
-	groupIndex int
-	rowIndex   int
-	panelIndex int
-	panelWidth int
+	groupIndex  int
+	rowIndex    int
+	panelIndex  int
+	panelWidth  int
+	panelHeight int
 
 	offsetY int
 }
@@ -804,7 +792,7 @@ func (o Observable) renderPanel(c *Dashboard, manipulations panelManipulationOpt
 		panel.ID = observablePanelID(opts.groupIndex, opts.rowIndex, opts.panelIndex)
 
 		// Set positioning
-		setPanelSize(panel, opts.panelWidth, 5)
+		setPanelSize(panel, opts.panelWidth, opts.panelHeight)
 		setPanelPos(panel, opts.panelIndex*opts.panelWidth, opts.offsetY)
 	}
 

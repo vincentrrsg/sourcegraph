@@ -148,6 +148,7 @@ export class SavedSearchListPage extends React.Component<Props, State> {
     }
 
     public render(): JSX.Element | null {
+        console.log(this.props.namespace)
         return (
             <div className={styles.savedSearchListPage} data-testid="saved-searches-list-page">
                 <PageHeader

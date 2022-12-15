@@ -215,7 +215,16 @@ func migrateUpload(
 			break
 		}
 
-		for path, document := range documentsByPath {
+		paths := make([]string, 0, len(documentsByPath))
+		for path := range documentsByPath {
+			paths = append(paths, path)
+		}
+		sort.Strings(paths)
+
+		for _, path := range paths {
+			document := documentsByPath[path]
+			definitionResultIDs := extractDefinitionResultIDs(document.Ranges)
+
 			scipDocument, err := processDocument(
 				ctx,
 				codeintelTx,
@@ -226,6 +235,7 @@ func migrateUpload(
 				indexerName,
 				path,
 				document,
+				definitionResultIDs,
 			)
 			if err != nil {
 				return err
@@ -291,6 +301,7 @@ func processDocument(
 	indexerName,
 	path string,
 	document DocumentData,
+	definitionResultIDs []ID,
 ) (*ogscip.Document, error) {
 	// We first read the relevant result chunks for this document into memory, writing them through to the
 	// shared result chunk cache to avoid re-fetching result chunks that are used to processed to documents
@@ -303,7 +314,7 @@ func processDocument(
 		resultChunkCache,
 		uploadID,
 		numResultChunks,
-		extractDefinitionResultIDs(document.Ranges),
+		definitionResultIDs,
 	)
 	if err != nil {
 		return nil, err

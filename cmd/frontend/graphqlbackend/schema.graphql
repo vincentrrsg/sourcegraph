@@ -2515,7 +2515,7 @@ type SearchAlert {
 """
 A paginated connection for saved search queries, defined in settings.
 """
-type SavedSearchesConnection {
+type SavedSearchesConnection implements Connection {
     """
     A list of saved searches.
     """
@@ -8500,6 +8500,20 @@ enum ExecutorCompatibility {
     Executor version is more than one version ahead of the Sourcegraph instance.
     """
     VERSION_AHEAD
+}
+
+"""
+An object with totalCount and PageInfo.
+"""
+interface Connection {
+    """
+    The total count of items in the connection.
+    """
+    totalCount: Int!
+    """
+    The pagination info for the connection.
+    """
+    pageInfo: ConnectionPageInfo!
 }
 
 """

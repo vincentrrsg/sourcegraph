@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react'
 import { ApolloError, WatchQueryFetchPolicy } from '@apollo/client'
 import { useHistory, useLocation } from 'react-router'
 
-import { GraphQLResult, useQuery } from '@sourcegraph/http-client'
+import { GraphQLResult, useQuery, gql } from '@sourcegraph/http-client'
 
 import { asGraphQLResult } from '../utils'
 
@@ -213,3 +213,15 @@ const useSyncPaginationArgsWithUrl = (
     )
     return [initialPaginationArgs, setPaginationArgs]
 }
+
+export const connectionInfoFragment = gql`
+    fragment ConnectionInfo on Connection {
+        totalCount
+        pageInfo {
+            hasNextPage
+            hasPreviousPage
+            endCursor
+            startCursor
+        }
+    }
+`

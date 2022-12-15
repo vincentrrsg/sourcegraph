@@ -5,6 +5,7 @@ import { createAggregateError } from '@sourcegraph/common'
 import { dataOrThrowErrors, gql } from '@sourcegraph/http-client'
 
 import { queryGraphQL, requestGraphQL } from '../backend/graphql'
+import { connectionInfoFragment } from '../components/FilteredConnection/hooks/usePageSwitcherPagination'
 import {
     EventLogsDataResult,
     EventLogsDataVariables,
@@ -59,23 +60,18 @@ const savedSearchFragment = gql`
     }
 `
 
-export function fetchSavedSearches(): Observable<SavedSearchFields[]> {
-    return queryGraphQL(gql`
-        query savedSearches {
-            savedSearches {
+export const savedSearchesQuery = gql`
+    query SavedSearchesQuery ($namespace: ID! $first: Int $last: Int $after: String $before: String) {
+        savedSearches(namespace: $namespace first: $first last: $last after: $after before: $before) {
+            nodes {
                 ...SavedSearchFields
             }
+            ...ConnectionInfo
         }
-        ${savedSearchFragment}
-    `).pipe(
-        map(({ data, errors }) => {
-            if (!data || !data.savedSearches) {
-                throw createAggregateError(errors)
-            }
-            return data.savedSearches
-        })
-    )
-}
+    }
+    ${savedSearchFragment}
+    ${connectionInfoFragment}
+`
 
 export function fetchSavedSearch(id: Scalars['ID']): Observable<SavedSearchFields> {
     return queryGraphQL(

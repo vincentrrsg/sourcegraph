@@ -71,8 +71,8 @@ SELECT CASE c1.count + c2.count WHEN 0 THEN 1 ELSE cast(c1.count as float) / cas
 var (
 	// NOTE: modified in tests
 	scipMigratorUploadBatchSize             = 64
-	scipMigratorDocumentBatchSize           = 128
-	scipMigratorResultChunkDefaultCacheSize = 1024
+	scipMigratorDocumentBatchSize           = 64
+	scipMigratorResultChunkDefaultCacheSize = 8192
 )
 
 func (m *scipMigrator) Up(ctx context.Context) error {

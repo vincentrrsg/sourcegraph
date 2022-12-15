@@ -62,7 +62,6 @@ func ConvertLSIFDocument(
 				if _, ok := implementationsBySymbolName[symbol.name]; !ok {
 					implementationsBySymbolName[symbol.name] = map[string]struct{}{}
 				}
-
 				implementationsBySymbolName[symbol.name][other] = struct{}{}
 			}
 		}

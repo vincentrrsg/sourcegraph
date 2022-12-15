@@ -77,18 +77,20 @@ var (
 
 func (m *scipMigrator) Up(ctx context.Context) error {
 	for i := 0; i < scipMigratorUploadBatchSize; i++ {
-		if err := m.upSingle(ctx); err != nil {
+		if ok, err := m.upSingle(ctx); err != nil {
 			return err
+		} else if !ok {
+			break
 		}
 	}
 
 	return nil
 }
 
-func (m *scipMigrator) upSingle(ctx context.Context) (err error) {
+func (m *scipMigrator) upSingle(ctx context.Context) (_ bool, err error) {
 	tx, err := m.codeintelStore.Transact(ctx)
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer func() { err = tx.Done(err) }()
 
@@ -96,31 +98,31 @@ func (m *scipMigrator) upSingle(ctx context.Context) (err error) {
 	// compete with other migrator routines that may be running.
 	uploadID, ok, err := basestore.ScanFirstInt(tx.Query(ctx, sqlf.Sprintf(scipMigratorSelectForMigrationQuery)))
 	if err != nil {
-		return err
+		return false, err
 	}
 	if !ok {
-		return nil
+		return false, nil
 	}
 
 	scipWriter, err := makeSCIPWriter(ctx, tx, uploadID)
 	if err != nil {
-		return err
+		return false, err
 	}
 	if err := migrateUpload(ctx, m.store, tx, m.serializer, scipWriter, uploadID); err != nil {
-		return err
+		return false, err
 	}
 	if err := scipWriter.Flush(ctx); err != nil {
-		return err
+		return false, err
 	}
 	if err := deleteLSIFData(ctx, tx, uploadID); err != nil {
-		return err
+		return false, err
 	}
 
 	if err := m.store.Exec(ctx, sqlf.Sprintf(scipMigratorMarkUploadAsReindexableQuery, uploadID)); err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
 const scipMigratorSelectForMigrationQuery = `

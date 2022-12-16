@@ -24,6 +24,7 @@ import (
 	"github.com/sourcegraph/sourcegraph/lib/codeintel/lsif/scip"
 	"github.com/sourcegraph/sourcegraph/lib/codeintel/precise"
 	"github.com/sourcegraph/sourcegraph/lib/errors"
+	"github.com/sourcegraph/sourcegraph/lib/group"
 )
 
 type scipMigrator struct {
@@ -70,21 +71,35 @@ SELECT CASE c1.count + c2.count WHEN 0 THEN 1 ELSE cast(c1.count as float) / cas
 
 var (
 	// NOTE: modified in tests
+	scipMigratorConcurrencyLevel            = 1
 	scipMigratorUploadBatchSize             = 64
 	scipMigratorDocumentBatchSize           = 64
 	scipMigratorResultChunkDefaultCacheSize = 8192
 )
 
 func (m *scipMigrator) Up(ctx context.Context) error {
+	ch := make(chan struct{}, scipMigratorUploadBatchSize)
 	for i := 0; i < scipMigratorUploadBatchSize; i++ {
-		if ok, err := m.upSingle(ctx); err != nil {
-			return err
-		} else if !ok {
-			break
-		}
+		ch <- struct{}{}
+	}
+	close(ch)
+
+	g := group.New().WithContext(ctx)
+	for i := 0; i < scipMigratorConcurrencyLevel; i++ {
+		g.Go(func(ctx context.Context) error {
+			for range ch {
+				if ok, err := m.upSingle(ctx); err != nil {
+					return err
+				} else if !ok {
+					break
+				}
+			}
+
+			return nil
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func (m *scipMigrator) upSingle(ctx context.Context) (_ bool, err error) {

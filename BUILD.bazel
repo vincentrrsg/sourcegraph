@@ -23,6 +23,17 @@ js_library(
     ],
 )
 
+js_library(
+    name = "postcss_config_js",
+    srcs = ["postcss.config.js"],
+    data = [
+        "//:node_modules/autoprefixer",
+        "//:node_modules/postcss-custom-media",
+        "//:node_modules/postcss-focus-visible",
+        "//:node_modules/postcss-inset",
+    ],
+)
+
 ts_config(
     name = "tsconfig",
     src = "tsconfig.bazel.json",

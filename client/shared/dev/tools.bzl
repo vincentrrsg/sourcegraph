@@ -33,9 +33,9 @@ def module_style_typings(name, deps = []):
         srcs = [":%s_sources" % name] + deps,
         outs = outs,
         args = [
+            "%s/**/*.module.scss" % native.package_name(),
             "--logLevel",
             "error",
-            "%s/**/*.module.scss" % native.package_name(),
             "--includePaths",
             "client",
             "node_modules",

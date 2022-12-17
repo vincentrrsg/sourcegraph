@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs'
 import { EndpointPair, ClosableEndpointPair } from '../../platform/context'
 
 // eslint-disable-next-line import/extensions
-import ExtensionHostWorker from './main.worker.ts'
+import ExtensionHostWorker from './main.worker'
 
 /**
  * Creates a web worker with the extension host and sets up a bidirectional MessageChannel-based communication channel.

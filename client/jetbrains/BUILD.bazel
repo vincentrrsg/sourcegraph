@@ -1,5 +1,8 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//client/shared/dev:generate_graphql_operations.bzl", "generate_graphql_operations")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+
+npm_link_all_packages(name = "node_modules")
 
 js_library(
     name = "graphql_operations_files",

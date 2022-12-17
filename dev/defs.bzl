@@ -1,6 +1,7 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@aspect_rules_js//npm:defs.bzl", _npm_package = "npm_package")
 load("@aspect_rules_ts//ts:defs.bzl", _ts_project = "ts_project")
-load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
 load("@npm//:sass/package_json.bzl", sass_bin = "bin")
 
 def ts_project(name, deps = [], **kwargs):
@@ -10,9 +11,13 @@ def ts_project(name, deps = [], **kwargs):
 
     testonly = kwargs.pop("testonly", False)
 
-    # Add standard test libraries for the repo test frameworks
+    # Add standard test libraries for the repo test frameworks.
     if testonly:
-        deps = deps + ["//:node_modules/@types/jest"]
+        deps = deps + ["//:node_modules/@types/jest", "//:node_modules/@types/node"]
+
+        # Those deps may have been added manually or by gazelle so remove duplicates
+        # TODO(bazel): drop this? Prevent other ways?
+        deps = ({d: True for d in deps}).keys()
 
     """Default arguments for ts_project."""
     _ts_project(
@@ -34,6 +39,11 @@ def ts_project(name, deps = [], **kwargs):
 
         # Allow any other args
         **kwargs
+    )
+
+    build_test(
+        name = "%s_build_check" % name,
+        targets = [":%s" % name],
     )
 
 def npm_package(name, **kwargs):

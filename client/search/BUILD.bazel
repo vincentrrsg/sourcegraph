@@ -1,5 +1,9 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
 load("//client/shared/dev:generate_graphql_operations.bzl", "generate_graphql_operations")
 load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("//dev:defs.bzl", "npm_package", "ts_project")
+
+npm_link_all_packages(name = "node_modules")
 
 js_library(
     name = "graphql_operations_files",
@@ -24,4 +28,43 @@ generate_graphql_operations(
     ],
     out = "src/graphql-operations.ts",
     interface_name = "SearchGraphQlOperations",
+)
+
+ts_project(
+    name = "search_lib",
+    srcs = [
+        "src/backend.ts",
+        "src/graphql-operations.ts",
+        "src/helpers.ts",
+        "src/helpers/queryExample.ts",
+        "src/index.ts",
+        "src/integration/streaming-search-mocks.ts",
+        "src/searchQueryState.tsx",
+    ],
+    deps = [
+        "//:node_modules/@sourcegraph/common",
+        "//:node_modules/@sourcegraph/http-client",
+        "//:node_modules/@sourcegraph/shared",
+        "//:node_modules/@types/react",
+        "//:node_modules/react",
+        "//:node_modules/rxjs",
+    ],
+)
+
+ts_project(
+    name = "search_tests",
+    testonly = True,
+    srcs = ["src/helpers/queryExample.test.ts"],
+    deps = [
+        ":search_lib",
+        "//:node_modules/@sourcegraph/shared",
+    ],
+)
+
+npm_package(
+    name = "search",
+    srcs = [
+        "package.json",
+        ":search_lib",
+    ],
 )

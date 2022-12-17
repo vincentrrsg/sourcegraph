@@ -1,0 +1,88 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("//dev:defs.bzl", "npm_package", "ts_project")
+
+# TODO(bazel): remove when no longer generated into src
+# gazelle:exclude **/*.scss.d.ts
+
+# gazelle:aspect_js_resolve **/*.scss :module_style_typings
+
+npm_link_all_packages(name = "node_modules")
+
+ts_project(
+    name = "storybook_lib",
+    srcs = [
+        "src/apollo/MockedStoryProvider.tsx",
+        "src/decorators/withChromaticThemes/ChromaticRoot/ChromaticRoot.tsx",
+        "src/decorators/withChromaticThemes/ChromaticRoot/index.ts",
+        "src/decorators/withChromaticThemes/index.ts",
+        "src/decorators/withChromaticThemes/withChromaticThemes.tsx",
+        "src/dllPlugin/ensureDllBundleIsReady.ts",
+        "src/dllPlugin/getVendorModules.ts",
+        "src/dllPlugin/getWebpackStats.ts",
+        "src/dllPlugin/index.ts",
+        "src/environment-config.ts",
+        "src/hooks/useChromaticTheme.ts",
+        "src/hooks/usePrependStyles.ts",
+        "src/hooks/useTheme.ts",
+        "src/index.ts",
+        "src/main.ts",
+        "src/preview.ts",
+        "src/themes.ts",
+        "src/utils/isChromatic.ts",
+        "src/webpack.config.common.ts",
+        "src/webpack.config.dll.ts",
+    ],
+    deps = [
+        ":module_style_typings",
+        "//:node_modules/@apollo/client",
+        "//:node_modules/@sourcegraph/build-config",
+        "//:node_modules/@sourcegraph/common",
+        "//:node_modules/@sourcegraph/http-client",
+        "//:node_modules/@sourcegraph/wildcard",
+        "//:node_modules/@storybook/addon-actions",
+        "//:node_modules/@storybook/addon-console",
+        "//:node_modules/@storybook/theming",
+        "//:node_modules/@types/case-sensitive-paths-webpack-plugin",
+        "//:node_modules/@types/classnames",
+        "//:node_modules/@types/lodash",
+        "//:node_modules/@types/node",
+        "//:node_modules/@types/react",
+        "//:node_modules/@types/signale",
+        "//:node_modules/@types/speed-measure-webpack-plugin",
+        "//:node_modules/case-sensitive-paths-webpack-plugin",
+        "//:node_modules/chromatic",
+        "//:node_modules/classnames",
+        "//:node_modules/focus-visible",
+        "//:node_modules/jsonc-parser",
+        "//:node_modules/lodash",
+        "//:node_modules/open-color",
+        "//:node_modules/react",
+        "//:node_modules/signale",
+        "//:node_modules/speed-measure-webpack-plugin",
+        "//:node_modules/storybook-addon-designs",
+        "//:node_modules/storybook-dark-mode",
+        "//:node_modules/webpack",
+        "//:node_modules/webpack-manifest-plugin",
+    ],
+)
+
+ts_project(
+    name = "storybook_tests",
+    testonly = True,
+    srcs = ["src/coverage.test.ts"],
+    deps = [
+        "//:node_modules/@sourcegraph/shared",
+        "//:node_modules/@storybook/addon-storyshots",
+        "//:node_modules/@storybook/addon-storyshots-puppeteer",
+        "//:node_modules/@types/node",
+        "//:node_modules/url",
+    ],
+)
+
+npm_package(
+    name = "storybook",
+    srcs = [
+        "package.json",
+        ":storybook_lib",
+    ],
+)

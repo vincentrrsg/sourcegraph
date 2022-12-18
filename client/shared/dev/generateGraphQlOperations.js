@@ -66,6 +66,10 @@ const PRETTIER = path.join(path.dirname(require.resolve('prettier')), 'bin-prett
  * Generates TypeScript files with types for all GraphQL operations.
  */
 async function generateGraphQlOperations() {
+  if (process.env.DEV_WEB_BUILDER_UNSAFE_FAST) {
+    return // TODO(sqs) this is super slow
+  }
+
   try {
     await _generateGraphQlOperations([
       {

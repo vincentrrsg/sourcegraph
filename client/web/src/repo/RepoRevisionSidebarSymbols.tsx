@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react'
 
 import classNames from 'classnames'
 import * as H from 'history'
-import { entries, escapeRegExp, flatMap, flow, groupBy, isEqual } from 'lodash/fp'
+import { entries, escapeRegExp, flatMap, flow, isEqual } from 'lodash'
+import groupBy from 'lodash/fp/groupBy'
 import { NavLink, useLocation } from 'react-router-dom'
 
 import { logger } from '@sourcegraph/common'

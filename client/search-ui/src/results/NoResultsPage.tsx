@@ -8,14 +8,14 @@ import { NoResultsSectionID as SectionID } from '@sourcegraph/shared/src/setting
 import { useTemporarySetting } from '@sourcegraph/shared/src/settings/temporary/useTemporarySetting'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 import { ThemeProps } from '@sourcegraph/shared/src/theme'
+import { QueryExamplesHomepage } from '@sourcegraph/web/src/search/home/QueryExamplesHomepage'
+import searchPageStyles from '@sourcegraph/web/src/search/home/SearchPage.module.scss'
+import { useNavbarQueryState } from '@sourcegraph/web/src/stores'
 import { Button, Link, Icon, H2, H3, Text } from '@sourcegraph/wildcard'
-
-import { QueryExamplesHomepage } from '../../../web/src/search/home/QueryExamplesHomepage'
 
 import { AnnotatedSearchInput } from './AnnotatedSearchExample'
 
 import styles from './NoResultsPage.module.scss'
-import searchPageStyles from '../../../web/src/search/home/SearchPage.module.scss'
 
 interface ContainerProps {
     sectionID?: SectionID
@@ -60,6 +60,9 @@ export const NoResultsPage: React.FunctionComponent<React.PropsWithChildren<NoRe
     showSearchContext,
     assetsRoot,
 }) => {
+    const setQueryState = useNavbarQueryState(state => state.setQueryState)
+    const queryState = useNavbarQueryState(state => state.queryState)
+
     const [hiddenSectionIDs, setHiddenSectionIds] = useTemporarySetting('search.hiddenNoResultsSections')
 
     const onClose = useCallback(
@@ -83,10 +86,8 @@ export const NoResultsPage: React.FunctionComponent<React.PropsWithChildren<NoRe
                     // TODO:
                     // selectedSearchContextSpec={props.selectedSearchContextSpec}
                     telemetryService={telemetryService}
-                    // TODO:
-                    queryState={{}}
-                    // TODO:
-                    setQueryState={{}}
+                    queryState={queryState}
+                    setQueryState={setQueryState}
                     isSourcegraphDotCom={isSourcegraphDotCom}
                 />
             </div>

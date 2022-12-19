@@ -205,12 +205,12 @@ export const QueryExamplesHomepage: React.FunctionComponent<QueryExamplesHomepag
     )
 }
 
-interface QueryExamplesLayout {
+interface QueryExamplesLayoutProps {
     queryColumns: QueryExamplesSection[][]
     onQueryExampleClick: (id: string | undefined, query: string, slug: string | undefined) => void
 }
 
-export const QueryExamplesLayout: React.FunctionComponent<QueryExamplesLayout> = ({
+export const QueryExamplesLayout: React.FunctionComponent<QueryExamplesLayoutProps> = ({
     queryColumns,
     onQueryExampleClick,
 }) => (
@@ -243,11 +243,7 @@ interface ExamplesSection extends QueryExamplesSection {
     onQueryExampleClick: (id: string | undefined, query: string, slug: string | undefined) => void
 }
 
-export const ExamplesSection: React.FunctionComponent<ExamplesSection> = ({
-    title,
-    queryExamples,
-    onQueryExampleClick,
-}) => (
+const ExamplesSection: React.FunctionComponent<ExamplesSection> = ({ title, queryExamples, onQueryExampleClick }) => (
     <div className={styles.queryExamplesSection}>
         <H2 className={styles.queryExamplesSectionTitle}>{title}</H2>
         <ul className={classNames('list-unstyled', styles.queryExamplesItems)}>

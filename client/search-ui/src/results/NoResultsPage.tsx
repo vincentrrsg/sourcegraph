@@ -10,9 +10,12 @@ import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryServi
 import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { Button, Link, Icon, H2, H3, Text } from '@sourcegraph/wildcard'
 
+import { QueryExamplesHomepage } from '../../../web/src/search/home/QueryExamplesHomepage'
+
 import { AnnotatedSearchInput } from './AnnotatedSearchExample'
 
 import styles from './NoResultsPage.module.scss'
+import searchPageStyles from '../../../web/src/search/home/SearchPage.module.scss'
 
 interface ContainerProps {
     sectionID?: SectionID
@@ -75,6 +78,18 @@ export const NoResultsPage: React.FunctionComponent<React.PropsWithChildren<NoRe
 
     return (
         <div className={styles.root}>
+            <div className={searchPageStyles.panelsContainer}>
+                <QueryExamplesHomepage
+                    // TODO:
+                    // selectedSearchContextSpec={props.selectedSearchContextSpec}
+                    telemetryService={telemetryService}
+                    // TODO:
+                    queryState={{}}
+                    // TODO:
+                    setQueryState={{}}
+                    isSourcegraphDotCom={isSourcegraphDotCom}
+                />
+            </div>
             <H2>Sourcegraph basics</H2>
             <div className={styles.panels}>
                 <div className="flex-1 flex-shrink-past-contents">

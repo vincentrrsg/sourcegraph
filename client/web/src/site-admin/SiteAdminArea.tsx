@@ -1,7 +1,6 @@
 import React, { useMemo, useRef } from 'react'
 
 import classNames from 'classnames'
-import { isEqual } from 'lodash'
 import ChartLineVariantIcon from 'mdi-react/ChartLineVariantIcon'
 import MapSearchIcon from 'mdi-react/MapSearchIcon'
 import { Route, RouteComponentProps, Switch } from 'react-router'
@@ -20,9 +19,15 @@ import { ErrorBoundary } from '../components/ErrorBoundary'
 import { HeroPage } from '../components/HeroPage'
 import { Page } from '../components/Page'
 import { useFeatureFlag } from '../featureFlags/useFeatureFlag'
+import { useUserExternalAccounts } from '../hooks/useUserExternalAccounts'
 import { RouteDescriptor } from '../util/contributions'
 
-import { overviewGroup } from './sidebaritems'
+import {
+    overviewGroupHeaderLabel,
+    maintenanceGroupHeaderLabel,
+    maintenanceGroupInstrumentationItemLabel,
+    maintenanceGroupMonitoringItemLabel,
+} from './sidebaritems'
 import { SiteAdminSidebar, SiteAdminSideBarGroup, SiteAdminSideBarGroups } from './SiteAdminSidebar'
 
 import styles from './SiteAdminArea.module.scss'
@@ -163,12 +168,74 @@ const AuthenticatedSiteAdminArea: React.FunctionComponent<React.PropsWithChildre
 
     const [isAdminAnalyticsDisabled] = useFeatureFlag('admin-analytics-disabled', false)
 
-    const adminSideBarGroups = useMemo(() => {
-        if (isAdminAnalyticsDisabled) {
-            return props.sideBarGroups
-        }
-        return [analyticsGroup, ...props.sideBarGroups.filter(group => !isEqual(group, overviewGroup))]
-    }, [isAdminAnalyticsDisabled, props.sideBarGroups])
+    const { data: externalAccounts, loading: isExternalAccountsLoading } = useUserExternalAccounts(
+        props.authenticatedUser.username
+    )
+    const [isSourcegraphOperatorOnlyObservability] = useFeatureFlag('sourcegraph-operator-only-observability')
+
+    const adminSideBarGroups = useMemo(
+        () =>
+            props.sideBarGroups.reduce((groups, group) => {
+                // DO NOT RETURN early in this function when reducing
+                // curr is used to modify the current group in place, use cases:
+                // - override the group with another one
+                // - modify the items in the group
+                // - assign null to curr to skip adding the group
+                let curr = group
+
+                if (!isAdminAnalyticsDisabled) {
+                    if (curr.header?.label === overviewGroupHeaderLabel) {
+                        curr = analyticsGroup
+                    }
+                }
+
+                // we default to hide o11y items if we are still trying to load external accounts
+                // as long as the 'sourcegraph-operator-only-observability' is enabled
+                // this is okay since such flag is only enabled on Cloud
+                // for customer admin, those items are always invisble
+                // for sourcegraph operator, they may notice some flickering during loading
+                // this is okay as long as we do not impact customer admin experience
+                if (isSourcegraphOperatorOnlyObservability) {
+                    if (isExternalAccountsLoading) {
+                        if (curr.header?.label === maintenanceGroupHeaderLabel) {
+                            curr = {
+                                ...curr,
+                                items: curr.items.filter(
+                                    item =>
+                                        item.label !== maintenanceGroupInstrumentationItemLabel &&
+                                        item.label !== maintenanceGroupMonitoringItemLabel
+                                ),
+                            }
+                        }
+                    }
+
+                    if (!externalAccounts.some(account => account.serviceType === 'sourcegraph-operator')) {
+                        if (curr.header?.label === maintenanceGroupHeaderLabel) {
+                            curr = {
+                                ...curr,
+                                items: curr.items.filter(
+                                    item =>
+                                        item.label !== maintenanceGroupInstrumentationItemLabel &&
+                                        item.label !== maintenanceGroupMonitoringItemLabel
+                                ),
+                            }
+                        }
+                    }
+                }
+
+                if (curr === null) {
+                    return groups
+                }
+                return [...groups, curr]
+            }, [] as SiteAdminSideBarGroup[]),
+        [
+            props.sideBarGroups,
+            isAdminAnalyticsDisabled,
+            isSourcegraphOperatorOnlyObservability,
+            isExternalAccountsLoading,
+            externalAccounts,
+        ]
+    )
 
     const routes = useMemo(
         () => (!isAdminAnalyticsDisabled ? [...analyticsRoutes, ...props.routes] : props.routes),

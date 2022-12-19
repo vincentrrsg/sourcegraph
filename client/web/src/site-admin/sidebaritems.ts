@@ -7,9 +7,11 @@ import SourceRepositoryIcon from 'mdi-react/SourceRepositoryIcon'
 
 import { SiteAdminSideBarGroup, SiteAdminSideBarGroups } from './SiteAdminSidebar'
 
+export const overviewGroupHeaderLabel = 'Statistics'
+
 export const overviewGroup: SiteAdminSideBarGroup = {
     header: {
-        label: 'Statistics',
+        label: overviewGroupHeaderLabel,
         icon: EarthIcon,
     },
     items: [
@@ -88,9 +90,15 @@ export const usersGroup: SiteAdminSideBarGroup = {
     ],
 }
 
+export const maintenanceGroupHeaderLabel = 'Maintenance'
+
+export const maintenanceGroupMonitoringItemLabel = 'Monitoring'
+
+export const maintenanceGroupInstrumentationItemLabel = 'Instrumentation'
+
 export const maintenanceGroup: SiteAdminSideBarGroup = {
     header: {
-        label: 'Maintenance',
+        label: maintenanceGroupHeaderLabel,
         icon: MonitorStarIcon,
     },
     items: [
@@ -115,12 +123,12 @@ export const maintenanceGroup: SiteAdminSideBarGroup = {
             to: '/site-admin/migrations',
         },
         {
-            label: 'Instrumentation',
+            label: maintenanceGroupInstrumentationItemLabel,
             to: '/-/debug/',
             source: 'server',
         },
         {
-            label: 'Monitoring',
+            label: maintenanceGroupMonitoringItemLabel,
             to: '/-/debug/grafana',
             source: 'server',
         },

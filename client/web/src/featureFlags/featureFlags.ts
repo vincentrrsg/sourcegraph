@@ -18,6 +18,7 @@ export type FeatureFlagName =
     | 'search-results-keyboard-navigation'
     | 'enable-streaming-git-blame'
     | 'plg-enable-add-codehost-widget'
+    | 'sourcegraph-operator-only-observability'
 
 interface OrgFlagOverride {
     orgID: string

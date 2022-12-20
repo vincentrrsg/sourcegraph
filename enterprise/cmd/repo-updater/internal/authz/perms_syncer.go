@@ -347,11 +347,20 @@ func (s *PermsSyncer) fetchUserPermsViaExternalAccounts(ctx context.Context, use
 		acct, err := provider.FetchAccount(ctx, user, accts, emails)
 		userID := user.ID
 		userUsername := user.Username
-		acctUserID := acct.UserID
-		acctID := acct.ID
-		acctAcctID := acct.AccountID
 
-		strTest2 := string(userID) + userUsername + string(acctUserID) + string(acctID) + acctAcctID
+		strTest2 := string(userID) + userUsername
+
+		if acct != nil {
+			acctUserID := acct.UserID
+			acctID := acct.ID
+			acctAcctID := acct.AccountID
+
+			strTest3 := string(acctUserID) + string(acctID) + acctAcctID
+			if err != nil {
+				providerLogger.Error(strTest3, log.Error(err))
+				continue
+			}
+		}
 		if err != nil {
 			providerLogger.Error(strTest2, log.Error(err))
 			continue

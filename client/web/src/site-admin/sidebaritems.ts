@@ -118,10 +118,6 @@ export const maintenanceGroup: SiteAdminSideBarGroup = {
             label: 'Instrumentation',
             to: '/-/debug/',
             source: 'server',
-            condition: () =>
-                window.context.deployType === 'kubernetes' ||
-                window.context.deployType === 'dev' ||
-                window.context.deployType === 'helm',
         },
         {
             label: 'Monitoring',
@@ -136,6 +132,11 @@ export const maintenanceGroup: SiteAdminSideBarGroup = {
         {
             label: 'Outbound requests',
             to: '/site-admin/outbound-requests',
+            source: 'server',
+        },
+        {
+            label: 'Slow Requests',
+            to: '/site-admin/slow-requests',
             source: 'server',
         },
     ],

@@ -2,11 +2,13 @@ package resolvers
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
 	"testing"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hexops/autogold"
 
 	"github.com/sourcegraph/log/logtest"
 
@@ -284,7 +286,7 @@ func TestInsightViewDashboardConnections(t *testing.T) {
 	}
 
 	global := true
-	globalGrants := []store.DashboardGrant{{nil, nil, &global}}
+	globalGrants := []store.DashboardGrant{{UserID: nil, OrgID: nil, Global: &global}}
 	dashboard1 := types.Dashboard{ID: 1, Title: "dashboard with view", InsightIDs: []string{view.UniqueID}}
 	_, err = base.dashboardStore.CreateDashboard(ctx,
 		store.CreateDashboardArgs{
@@ -297,7 +299,7 @@ func TestInsightViewDashboardConnections(t *testing.T) {
 	}
 
 	userId := 1
-	privateCurrentUserGrants := []store.DashboardGrant{{&userId, nil, nil}}
+	privateCurrentUserGrants := []store.DashboardGrant{{UserID: &userId, OrgID: nil, Global: nil}}
 	dashboard2 := types.Dashboard{ID: 2, Title: "users private dashboard with view", InsightIDs: []string{view.UniqueID}}
 	_, err = base.dashboardStore.CreateDashboard(ctx,
 		store.CreateDashboardArgs{
@@ -308,7 +310,7 @@ func TestInsightViewDashboardConnections(t *testing.T) {
 		t.Fatal(err)
 	}
 	notUsersId := 2
-	privateDifferentUserGrants := []store.DashboardGrant{{&notUsersId, nil, nil}}
+	privateDifferentUserGrants := []store.DashboardGrant{{UserID: &notUsersId, OrgID: nil, Global: nil}}
 	dashboard3 := types.Dashboard{ID: 3, Title: "different users private dashboard with view", InsightIDs: []string{view.UniqueID}}
 	_, err = base.dashboardStore.CreateDashboard(ctx,
 		store.CreateDashboardArgs{
@@ -564,4 +566,66 @@ func TestRemoveClosePoints(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInsightRepoScopeResolver(t *testing.T) {
+
+	makeSeries := func(repoList []string, search string) types.InsightViewSeries {
+		var repoSearch *string = &search
+		if search == "" {
+			repoSearch = nil
+		}
+		return types.InsightViewSeries{
+			SeriesID:            "asdf",
+			Query:               "asdf",
+			SampleIntervalUnit:  string(types.Month),
+			SampleIntervalValue: 1,
+			GenerationMethod:    types.Search,
+			Repositories:        repoList,
+			RepositoryCriteria:  repoSearch,
+		}
+
+	}
+
+	type tcResult struct {
+		SearchScoped bool
+		RepoList     []string
+		Search       string
+		AllRepos     bool
+	}
+
+	testCases := []struct {
+		series types.InsightViewSeries
+		want   autogold.Value
+	}{
+		{series: makeSeries(nil, "repo:a"), want: autogold.Want("search based", `{"SearchScoped":true,"RepoList":null,"Search":"repo:a","AllRepos":false}`)},
+		{series: makeSeries([]string{"repoA", "repoB"}, ""), want: autogold.Want("named list", `{"SearchScoped":false,"RepoList":["repoA","repoB"],"Search":"","AllRepos":false}`)},
+		{series: makeSeries(nil, ""), want: autogold.Want("all repos", `{"SearchScoped":true,"RepoList":null,"Search":"","AllRepos":true}`)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.want.Name(), func(t *testing.T) {
+			unionResolver := insightRepositoryDefinitionResolver{series: tc.series}
+			repoScopedResolver, ok := unionResolver.ToInsightRepositoryScope()
+			var result tcResult
+			if ok == true {
+				result.SearchScoped = false
+				repos, _ := repoScopedResolver.Repositories(context.Background())
+				result.RepoList = repos
+			}
+
+			searchScopedResolver, ok2 := unionResolver.ToRepositorySearchScope()
+			if ok && ok2 {
+				t.Fail()
+			}
+			if ok2 {
+				result.SearchScoped = true
+				result.Search = searchScopedResolver.Search()
+				result.AllRepos = searchScopedResolver.AllRepositories()
+			}
+			resultStr, _ := json.Marshal(result)
+			tc.want.Equal(t, string(resultStr))
+		})
+	}
+
 }

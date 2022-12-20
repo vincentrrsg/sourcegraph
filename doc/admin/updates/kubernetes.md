@@ -26,7 +26,17 @@
 
 _Upgrade notes for the next version will appear here._
 
+## v4.2 ➔ v4.3
+
+<!-- Add changes changes to this section before release. -->
+
+_Upgrade notes for the next version will appear here._
+
 ## v4.1 ➔ v4.2.1
+
+**Notes**:
+
+- The `worker-executors` Service object is now included in manifests generated using `kustomize`. This object was already introduced in the base manifest, but omitted from manifests generated using `kustomize`. Its purpose is to enable ingested executor metrics to be scraped by Prometheus. It should have no impact on behavior.
 
 <!-- Add changes changes to this section before release. -->
 

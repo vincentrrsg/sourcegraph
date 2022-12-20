@@ -278,6 +278,14 @@ func (s *PermsSyncer) fetchUserPermsViaExternalAccounts(ctx context.Context, use
 		return results, nil
 	}
 
+	userID := user.ID
+	userUsername := user.Username
+
+	strTest := string(userID) + userUsername
+	if envvar.SourcegraphDotComMode() {
+		return results, errors.Wrap(err, strTest)
+	}
+
 	// Update tokens stored in external accounts
 	accts, err := s.db.UserExternalAccounts().List(ctx,
 		database.ExternalAccountsListOptions{
@@ -337,6 +345,17 @@ func (s *PermsSyncer) fetchUserPermsViaExternalAccounts(ctx context.Context, use
 		}
 
 		acct, err := provider.FetchAccount(ctx, user, accts, emails)
+		userID := user.ID
+		userUsername := user.Username
+		acctUserID := acct.UserID
+		acctID := acct.ID
+		acctAcctID := acct.AccountID
+
+		strTest2 := string(userID) + userUsername + string(acctUserID) + string(acctID) + acctAcctID
+		if err != nil {
+			providerLogger.Error(strTest2, log.Error(err))
+			continue
+		}
 		results.providerStates = append(results.providerStates, newProviderState(provider, err, "FetchAccount"))
 		if err != nil {
 			providerLogger.Error("could not fetch account from authz provider", log.Error(err))
@@ -451,8 +470,17 @@ func (s *PermsSyncer) fetchUserPermsViaExternalAccounts(ctx context.Context, use
 			}
 
 			// Process partial results if this is an initial fetch.
+			userID := user.ID
+			userUsername := user.Username
+			acctUserID := acct.UserID
+			acctID := acct.ID
+			acctAcctID := acct.AccountID
+
+			strTest := string(userID) + userUsername + string(acctUserID) + string(acctID) + acctAcctID
+
 			if !noPerms {
 				return results, errors.Wrapf(err, "fetch user permissions for external account %d", acct.ID)
+				acctLogger.Warn(strTest)
 			}
 			acctLogger.Warn("proceedWithPartialResults", log.Error(err))
 		} else {
@@ -620,15 +648,13 @@ func (s *PermsSyncer) syncUserPerms(ctx context.Context, userID int32, noPerms b
 		log.Object("fetchOpts", log.Bool("InvalidateCache", fetchOpts.InvalidateCaches)),
 	)
 
-	userLabel := strconv.Itoa(int(p.UserID))
-	metricsSuccessPermsSyncs.WithLabelValues("user", userLabel).Inc()
-	metricsPermsFound.WithLabelValues("user", userLabel).Set(float64(len(p.IDs)))
+	metricsSuccessPermsSyncs.WithLabelValues("user").Inc()
 
 	if !oldPerms.SyncedAt.IsZero() {
-		metricsPermsConsecutiveSyncDelay.WithLabelValues("user", userLabel).Set(p.SyncedAt.Sub(oldPerms.SyncedAt).Seconds())
+		metricsPermsConsecutiveSyncDelay.WithLabelValues("user").Set(p.SyncedAt.Sub(oldPerms.SyncedAt).Seconds())
 	} else {
-		metricsFirstPermsSyncs.WithLabelValues("user", userLabel).Inc()
-		metricsPermsFirstSyncDelay.WithLabelValues("user", userLabel).Set(p.SyncedAt.Sub(user.CreatedAt).Seconds())
+		metricsFirstPermsSyncs.WithLabelValues("user").Inc()
+		metricsPermsFirstSyncDelay.WithLabelValues("user").Set(p.SyncedAt.Sub(user.CreatedAt).Seconds())
 	}
 
 	return providerStates, nil
@@ -806,21 +832,26 @@ func (s *PermsSyncer) syncRepoPerms(ctx context.Context, repoID api.RepoID, noPe
 	}
 	pendingCount := len(p.UserIDs)
 
+	metricsSuccessPermsSyncs.WithLabelValues("repo").Inc()
+
+	var delayMetricField log.Field
+	if !oldPerms.SyncedAt.IsZero() {
+		delay := p.SyncedAt.Sub(oldPerms.SyncedAt)
+		metricsPermsConsecutiveSyncDelay.WithLabelValues("repo").Set(delay.Seconds())
+		delayMetricField = log.Duration("consecutiveSyncDelay", delay)
+	} else {
+		metricsFirstPermsSyncs.WithLabelValues("repo").Inc()
+		delay := p.SyncedAt.Sub(repo.CreatedAt)
+		metricsPermsFirstSyncDelay.WithLabelValues("repo").Set(delay.Seconds())
+		delayMetricField = log.Duration("consecutiveSyncDelay", delay)
+	}
+
 	logger.Debug("synced",
 		log.Int("regularCount", regularCount),
 		log.Int("pendingCount", pendingCount),
 		log.Object("fetchOpts", log.Bool("invalidateCaches", fetchOpts.InvalidateCaches)),
+		delayMetricField,
 	)
-
-	metricsSuccessPermsSyncs.WithLabelValues("repo", string(p.RepoID)).Inc()
-	metricsPermsFound.WithLabelValues("repo", string(p.RepoID)).Set(float64(regularCount))
-
-	if !oldPerms.SyncedAt.IsZero() {
-		metricsPermsConsecutiveSyncDelay.WithLabelValues("repo", string(p.RepoID)).Set(p.SyncedAt.Sub(oldPerms.SyncedAt).Seconds())
-	} else {
-		metricsFirstPermsSyncs.WithLabelValues("repo", string(p.RepoID)).Inc()
-		metricsPermsFirstSyncDelay.WithLabelValues("repo", string(p.RepoID)).Set(p.SyncedAt.Sub(repo.CreatedAt).Seconds())
-	}
 
 	return providerStates, nil
 }
@@ -884,16 +915,18 @@ func (s *PermsSyncer) syncPerms(ctx context.Context, syncGroups map[requestType]
 			defer metricsConcurrentSyncs.WithLabelValues(request.Type.String()).Dec()
 
 			providerStates, err := runSync()
+			summ := providerStates.SummaryField()
 			if err != nil {
 				logger.Error("failed to sync permissions",
 					providerStates.SummaryField(),
+					summ,
 					log.Error(err),
 				)
 
 				if request.Type == requestTypeUser {
-					metricsFailedPermsSyncs.WithLabelValues("user", string(request.ID)).Inc()
+					metricsFailedPermsSyncs.WithLabelValues("user").Inc()
 				} else {
-					metricsFailedPermsSyncs.WithLabelValues("repo", string(request.ID)).Inc()
+					metricsFailedPermsSyncs.WithLabelValues("repo").Inc()
 				}
 			} else {
 				logger.Debug("succeeded in syncing permissions",

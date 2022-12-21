@@ -192,7 +192,6 @@ func (r *Runner) Copy(ctx context.Context, concurrency int) error {
 					if err != nil {
 						repo.Failed = err.Error()
 						r.logger.Error("failed to push repo", logRepo(repo, log.Error(err))...)
-						println()
 					} else {
 						repo.Pushed = true
 					}

@@ -232,6 +232,8 @@ func TestSetUserEmailVerified(t *testing.T) {
 			userExternalAccounts := database.NewMockUserExternalAccountsStore()
 			userExternalAccounts.DeleteFunc.SetDefaultReturn(nil)
 
+			permSyncJobs := database.NewMockPermissionSyncJobStore()
+
 			subrepoPerms := database.NewMockSubRepoPermsStore()
 			subrepoPerms.DeleteByUserFunc.SetDefaultReturn(nil)
 
@@ -246,6 +248,7 @@ func TestSetUserEmailVerified(t *testing.T) {
 			db.AuthzFunc.SetDefaultReturn(authz)
 			db.UserExternalAccountsFunc.SetDefaultReturn(userExternalAccounts)
 			db.SubRepoPermsFunc.SetDefaultReturn(subrepoPerms)
+			db.PermissionSyncJobsFunc.SetDefaultReturn(permSyncJobs)
 
 			RunTests(t, test.gqlTests(db))
 

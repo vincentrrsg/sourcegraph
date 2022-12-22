@@ -16,7 +16,9 @@ func SanitizeDocument(document *scip.Document) *scip.Document {
 	return document
 }
 
-// TODO - document
+// SanitizeOccurrences ensures that all strings in the given occurrence slice are valid UTF-8.
+// The input slice is modified in-place but returned for convenience.
+// This is a requirement for successful protobuf encoding.
 func SanitizeOccurrences(occurrences []*scip.Occurrence) []*scip.Occurrence {
 	for i, occurrence := range occurrences {
 		occurrences[i] = SanitizeOccurrence(occurrence)
@@ -25,7 +27,8 @@ func SanitizeOccurrences(occurrences []*scip.Occurrence) []*scip.Occurrence {
 	return occurrences
 }
 
-// TODO - document
+// SanitizeOccurrence ensures that all strings in the given occurrence are valid UTF-8.
+// This is a requirement for successful protobuf encoding.
 func SanitizeOccurrence(occurrence *scip.Occurrence) *scip.Occurrence {
 	occurrence.Symbol = sanitizeString(occurrence.Symbol)
 	occurrence.OverrideDocumentation = sanitizeStringSlice(occurrence.OverrideDocumentation)
@@ -33,7 +36,9 @@ func SanitizeOccurrence(occurrence *scip.Occurrence) *scip.Occurrence {
 	return occurrence
 }
 
-// TODO - document
+// SanitizeDiagnostics ensures that all strings in the given diagnostic slice are valid UTF-8.
+// The input slice is modified in-place but returned for convenience.
+// This is a requirement for successful protobuf encoding.
 func SanitizeDiagnostics(diagnostics []*scip.Diagnostic) []*scip.Diagnostic {
 	for i, diagnostic := range diagnostics {
 		diagnostics[i] = SanitizeDiagnostic(diagnostic)
@@ -42,7 +47,8 @@ func SanitizeDiagnostics(diagnostics []*scip.Diagnostic) []*scip.Diagnostic {
 	return diagnostics
 }
 
-// TODO - document
+// SanitizeDiagnostic ensures that all strings in the given diagnostic are valid UTF-8.
+// This is a requirement for successful protobuf encoding.
 func SanitizeDiagnostic(diagnostic *scip.Diagnostic) *scip.Diagnostic {
 	diagnostic.Code = sanitizeString(diagnostic.Code)
 	diagnostic.Message = sanitizeString(diagnostic.Message)
@@ -50,7 +56,9 @@ func SanitizeDiagnostic(diagnostic *scip.Diagnostic) *scip.Diagnostic {
 	return diagnostic
 }
 
-// TODO - document
+// SanitizeSymbols ensures that all strings in the given symbols slice are valid UTF-8.
+// The input slice is modified in-place but returned for convenience.
+// This is a requirement for successful protobuf encoding.
 func SanitizeSymbols(symbols []*scip.SymbolInformation) []*scip.SymbolInformation {
 	for i, symbol := range symbols {
 		symbols[i] = SanitizeSymbol(symbol)
@@ -59,7 +67,8 @@ func SanitizeSymbols(symbols []*scip.SymbolInformation) []*scip.SymbolInformatio
 	return symbols
 }
 
-// TODO - document
+// SanitizeSymbol ensures that all strings in the given symbol are valid UTF-8.
+// This is a requirement for successful protobuf encoding.
 func SanitizeSymbol(symbol *scip.SymbolInformation) *scip.SymbolInformation {
 	symbol.Symbol = sanitizeString(symbol.Symbol)
 	symbol.Documentation = sanitizeStringSlice(symbol.Documentation)
@@ -71,7 +80,9 @@ func SanitizeSymbol(symbol *scip.SymbolInformation) *scip.SymbolInformation {
 	return symbol
 }
 
-// TODO - document
+// sanitizeStringSlice ensures the strings in the given slice are all valid UTF-8.
+// The input slice is modified in-place but returned for convenience.
+// This is a requirement for successful protobuf encoding.
 func sanitizeStringSlice(ss []string) []string {
 	for i, s := range ss {
 		ss[i] = sanitizeString(s)
@@ -80,11 +91,12 @@ func sanitizeStringSlice(ss []string) []string {
 	return ss
 }
 
-// TODO - document
+// sanitizeString coerces a string into valid UTF-8 (if it's not already).
 func sanitizeString(s string) string {
 	if utf8.ValidString(s) {
 		return s
 	}
 
+	// magic
 	return string([]rune(s))
 }

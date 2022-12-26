@@ -563,7 +563,6 @@ export const BlobPage: React.FunctionComponent<React.PropsWithChildren<BlobPageP
                         isLightTheme={isLightTheme}
                         telemetryService={props.telemetryService}
                         location={props.location}
-                        disableDecorations={false}
                         role="region"
                         ariaLabel="File blob"
                         isBlameVisible={isBlameVisible}

@@ -10,7 +10,6 @@ import { Location, MarkupKind, Position, Range, Selection } from '@sourcegraph/e
 import { ClientAPI } from '../client/api/api'
 import { syncRemoteSubscription } from '../util'
 
-import { createDecorationType } from './api/decorations'
 import { DocumentHighlightKind } from './api/documentHighlights'
 import { InitData, updateContext } from './extensionHost'
 import { PanelViewData } from './extensionHostApi'
@@ -110,8 +109,6 @@ export function createExtensionAPIFactory(
         get windows() {
             return [window]
         },
-        registerFileDecorationProvider: (provider: sourcegraph.FileDecorationProvider): sourcegraph.Unsubscribable =>
-            addWithRollback(state.fileDecorationProviders, provider),
         createPanelView: id => {
             const panelViewData = new BehaviorSubject<PanelViewData>({
                 id,
@@ -178,7 +175,6 @@ export function createExtensionAPIFactory(
                     return addWithRollback(state.homepageViewProviders, { id, viewProvider: provider })
             }
         },
-        createDecorationType,
         // `log` is implemented on extension activation
         log: noop,
     }

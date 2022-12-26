@@ -11,7 +11,6 @@ import { formatSearchParameters } from '@sourcegraph/common'
 import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { Scalars } from '@sourcegraph/shared/src/graphql-operations'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
-import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { AbsoluteRepo } from '@sourcegraph/shared/src/util/url'
 
 import { dirname } from '../util/path'
@@ -21,7 +20,7 @@ import { getDomElement, scrollIntoView } from './util'
 
 import styles from './Tree.module.scss'
 
-interface Props extends AbsoluteRepo, ExtensionsControllerProps, ThemeProps, TelemetryProps {
+interface Props extends AbsoluteRepo, ExtensionsControllerProps, TelemetryProps {
     history: H.History
     scrollRootSelector?: string
 
@@ -343,7 +342,6 @@ export class Tree extends React.PureComponent<Props, State> {
                     setActiveNode={this.setActiveNode}
                     sizeKey={this.props.sizeKey}
                     extensionsController={this.props.extensionsController}
-                    isLightTheme={this.props.isLightTheme}
                     telemetryService={this.props.telemetryService}
                     enableMergedFileSymbolSidebar={this.props.enableMergedFileSymbolSidebar}
                 />

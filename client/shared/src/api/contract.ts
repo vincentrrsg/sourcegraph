@@ -14,7 +14,6 @@ import { SettingsEdit } from './client/services/settings'
 import { ExecutableExtension } from './extension/activation'
 import { ProxySubscribable } from './extension/api/common'
 import {
-    FileDecorationsByPath,
     LinkPreviewMerged,
     ViewContexts,
     PanelViewData,
@@ -63,9 +62,6 @@ export interface FlatExtensionHostAPI {
 
     hasReferenceProvidersForDocument: (parameters: TextDocumentPositionParameters) => ProxySubscribable<boolean>
 
-    // Tree
-    getFileDecorations: (parameters: sourcegraph.FileDecorationContext) => ProxySubscribable<FileDecorationsByPath>
-
     // CONTEXT + CONTRIBUTIONS
 
     /**
@@ -104,8 +100,6 @@ export interface FlatExtensionHostAPI {
     getActiveViewComponentChanges: () => ProxySubscribable<ExtensionViewer | undefined>
 
     getActiveCodeEditorPosition: () => ProxySubscribable<TextDocumentPositionParameters | null>
-
-    getTextDecorations: (viewerId: ViewerId) => ProxySubscribable<clientType.TextDocumentDecoration[]>
 
     /**
      * Add a viewer.

@@ -59,6 +59,8 @@ export const ENVIRONMENT_CONFIG = {
     //  https://docs.sourcegraph.com/dev/background-information/web/build#esbuild).
     DEV_WEB_BUILDER: (process.env.DEV_WEB_BUILDER === 'esbuild' ? 'esbuild' : 'webpack') as WEB_BUILDER,
 
+    DEV_WEB_BUILDER_NO_MONACO: Boolean(process.env.DEV_WEB_BUILDER_NO_MONACO),
+
     /**
      * ----------------------------------------
      * Application features configuration.

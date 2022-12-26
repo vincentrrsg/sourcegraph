@@ -101,8 +101,9 @@ export const stylePlugin: esbuild.Plugin = {
         const resolver = ResolverFactory.createResolver({
             fileSystem: new CachedInputFileSystem(fs, 4000),
             extensions: ['.css', '.scss'],
-            symlinks: true, // Resolve workspace symlinks
+            symlinks: false, // Resolve workspace symlinks // false=1.269, true=~1.35
             modules: [NODE_MODULES_PATH],
+            unsafeCache: true, // ~1.192s
         })
 
         build.onResolve({ filter: /\.s?css$/, namespace: 'file' }, async args => {

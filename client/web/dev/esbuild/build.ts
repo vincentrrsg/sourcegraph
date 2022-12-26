@@ -16,12 +16,14 @@ import {
     experimentalNoticePlugin,
     buildTimerPlugin,
 } from '@sourcegraph/build-config'
+import { isDefined } from '@sourcegraph/common'
 
 import { ENVIRONMENT_CONFIG } from '../utils'
 
 import { manifestPlugin } from './manifestPlugin'
 
 const isEnterpriseBuild = ENVIRONMENT_CONFIG.ENTERPRISE
+const useMonaco = !ENVIRONMENT_CONFIG.DEV_WEB_BUILDER_NO_MONACO
 
 const DEV_WEB_BUILDER_ESBUILD_FORCE_TREESHAKING = Boolean(process.env.DEV_WEB_BUILDER_ESBUILD_FORCE_TREESHAKING)
 
@@ -48,11 +50,31 @@ export const BUILD_OPTIONS: esbuild.BuildOptions = {
         packageResolutionPlugin({
             path: require.resolve('path-browserify'),
             ...RXJS_RESOLUTIONS,
+            ...(useMonaco
+                ? null
+                : {
+                      // Monaco
+                      '@sourcegraph/shared/src/components/MonacoEditor':
+                          '@sourcegraph/shared/src/components/NonMonacoEditor',
+                      'monaco-editor': '/dev/null',
+                      'monaco-editor/esm/vs/editor/editor.api': '/dev/null',
+                      'monaco-yaml': '/dev/null',
+
+                      // GraphiQL
+                      './api/ApiConsole': path.join(ROOT_PATH, 'client/web/src/api/NoApiConsole.tsx'),
+                      '@graphiql/react': '/dev/null',
+                      graphiql: '/dev/null',
+
+                      // Recharts
+                      recharts: '/dev/null',
+
+                      lodash: 'lodash-es',
+                  }),
         }),
-        monacoPlugin(MONACO_LANGUAGES_AND_FEATURES),
+        useMonaco ? monacoPlugin(MONACO_LANGUAGES_AND_FEATURES) : null,
         buildTimerPlugin,
         experimentalNoticePlugin,
-    ],
+    ].filter(isDefined),
     define: {
         ...Object.fromEntries(
             Object.entries({ ...ENVIRONMENT_CONFIG, SOURCEGRAPH_API_URL: undefined }).map(([key, value]) => [
@@ -88,7 +110,9 @@ export const build = async (): Promise<void> => {
     if (metafile) {
         writeFileSync(metafile, JSON.stringify(result.metafile), 'utf-8')
     }
-    await buildMonaco(STATIC_ASSETS_PATH)
+    if (useMonaco) {
+        await buildMonaco(STATIC_ASSETS_PATH)
+    }
 }
 
 if (require.main === module) {

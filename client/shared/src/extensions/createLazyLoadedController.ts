@@ -1,5 +1,4 @@
-import { from, Subscription } from 'rxjs'
-import { switchMap } from 'rxjs/operators'
+import { Subscription } from 'rxjs'
 
 import type { InitData } from '../api/extension/extensionHost'
 import { syncPromiseSubscription } from '../api/util'
@@ -23,8 +22,6 @@ export function createController(
         | 'settings'
         | 'getGraphQLClient'
         | 'requestGraphQL'
-        | 'showMessage'
-        | 'showInputBox'
         | 'sideloadedExtensionURL'
         | 'getScriptURLForExtension'
         | 'getStaticExtensions'
@@ -48,13 +45,8 @@ export function createController(
     // TODO: Debug helpers, logging
 
     return {
-        executeCommand: (parameters, suppressNotificationOnError) =>
-            extensionHostClientPromise.then(({ exposedToClient }) =>
-                exposedToClient.executeCommand(parameters, suppressNotificationOnError)
-            ),
-        commandErrors: from(extensionHostClientPromise).pipe(
-            switchMap(({ exposedToClient }) => exposedToClient.commandErrors)
-        ),
+        executeCommand: parameters =>
+            extensionHostClientPromise.then(({ exposedToClient }) => exposedToClient.executeCommand(parameters)),
         registerCommand: entryToRegister =>
             syncPromiseSubscription(
                 extensionHostClientPromise.then(({ exposedToClient }) =>

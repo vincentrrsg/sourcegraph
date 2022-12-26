@@ -19,8 +19,6 @@ import {
     ViewContexts,
     PanelViewData,
     ViewProviderResult,
-    ProgressNotification,
-    PlainNotification,
     ContributionOptions,
 } from './extension/extensionHostApi'
 import { ExtensionViewer, TextDocumentData, ViewerData, ViewerId, ViewerUpdate } from './viewerTypes'
@@ -141,10 +139,6 @@ export interface FlatExtensionHostAPI {
      */
     removeViewer(viewer: ViewerId): void
 
-    // Notifications
-    getPlainNotifications: () => ProxySubscribable<PlainNotification>
-    getProgressNotifications: () => ProxySubscribable<ProgressNotification & ProxyMarked>
-
     // Views
     getPanelViews: () => ProxySubscribable<PanelViewData[]>
 
@@ -201,10 +195,6 @@ export interface MainThreadAPI {
         name: string,
         command: Remote<((...args: any) => any) & ProxyMarked>
     ) => sourcegraph.Unsubscribable & ProxyMarked
-
-    // User interaction methods
-    showMessage: (message: string) => Promise<void>
-    showInputBox: (options?: sourcegraph.InputBoxOptions) => Promise<string | undefined>
 
     getSideloadedExtensionURL: () => ProxySubscribable<string | null>
     getScriptURLForExtension: () =>

@@ -375,12 +375,7 @@ export class ActionItem extends React.PureComponent<ActionItemProps, State, type
 
         const emitDidExecute = (): void => {
             if (this.props.onDidExecute) {
-                // Defer calling onRun until after the URL has been opened. If we call it immediately, then in
-                // CommandList it immediately updates the (most-recent-first) ordering of the ActionItems, and
-                // the URL actually changes underneath us before the URL is opened. There is no harm to
-                // deferring this call; onRun's documentation allows this.
-                const onDidExecute = this.props.onDidExecute
-                setTimeout(() => onDidExecute(action.id))
+                this.props.onDidExecute(action.id)
             }
         }
 

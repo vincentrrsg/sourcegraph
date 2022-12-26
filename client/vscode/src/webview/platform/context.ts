@@ -24,8 +24,6 @@ export interface VSCodePlatformContext
         | 'updateSettings'
         | 'settings'
         | 'getGraphQLClient'
-        | 'showMessage'
-        | 'showInputBox'
         | 'sideloadedExtensionURL'
         | 'getScriptURLForExtension'
         | 'getStaticExtensions'
@@ -63,8 +61,6 @@ export function createPlatformContext(extensionCoreAPI: Comlink.Remote<Extension
         sideloadedExtensionURL: new BehaviorSubject<string | null>(null),
         clientApplication: 'other', // TODO add 'vscode-extension' to `clientApplication`,
         getScriptURLForExtension: () => undefined,
-        // TODO showInputBox
-        // TODO showMessage
         getStaticExtensions: () => getInlineExtensions(),
     }
 

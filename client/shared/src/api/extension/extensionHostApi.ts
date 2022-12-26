@@ -421,10 +421,6 @@ export function createExtensionHostAPI(state: ExtensionHostState): FlatExtension
                 )
             ),
 
-        // Notifications
-        getPlainNotifications: () => proxySubscribable(state.plainNotifications.asObservable()),
-        getProgressNotifications: () => proxySubscribable(state.progressNotifications.asObservable()),
-
         // Views
         getPanelViews: () =>
             // Don't need `combineLatestOrDefault` here since each panel view
@@ -743,59 +739,12 @@ export interface PanelViewData extends Omit<sourcegraph.PanelView, 'unsubscribe'
     id: string
 }
 
-/**
- * A notification message to display to the user.
- */
-export type ExtensionNotification = PlainNotification | ProgressNotification
-
-interface BaseNotification {
-    /** The message of the notification. */
-    message?: string
-
-    /**
-     * The type of the message.
-     */
-    type: sourcegraph.NotificationType
-
-    /** The source of the notification.  */
-    source?: string
-}
-
-export interface PlainNotification extends BaseNotification {}
-
-export interface ProgressNotification {
-    // Put all base notification properties in a nested object because
-    // ProgressNotifications are proxied, so it's better to clone this
-    // notification object than to wait for all property access promises
-    // to resolve
-    baseNotification: BaseNotification
-
-    /**
-     * Progress updates to show in this notification (progress bar and status messages).
-     * If this Observable errors, the notification will be changed to an error type.
-     */
-    progress: ProxySubscribable<sourcegraph.Progress>
-}
-
 export interface ViewProviderResult {
     /** The ID of the view provider. */
     id: string
 
     /** The result returned by the provider. */
     view: sourcegraph.View | undefined | ErrorLike
-}
-
-/**
- * The type of a notification.
- * This is needed because if sourcegraph.NotificationType enum values are referenced,
- * the `sourcegraph` module import at the top of the file is emitted in the generated code.
- */
-export const NotificationType: typeof sourcegraph.NotificationType = {
-    Error: 1,
-    Warning: 2,
-    Info: 3,
-    Log: 4,
-    Success: 5,
 }
 
 // Contributions

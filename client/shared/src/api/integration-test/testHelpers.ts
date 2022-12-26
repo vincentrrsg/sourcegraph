@@ -47,8 +47,6 @@ interface Mocks
         | 'getScriptURLForExtension'
         | 'clientApplication'
         | 'sideloadedExtensionURL'
-        | 'showMessage'
-        | 'showInputBox'
     > {}
 
 const NOOP_MOCKS: Mocks = {

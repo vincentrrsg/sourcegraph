@@ -141,11 +141,7 @@ var settingsFieldMergeDepths = map[string]int{
 	"SearchScopes":           1,
 	"SearchSavedQueries":     1,
 	"SearchRepositoryGroups": 1,
-	"InsightsDashboards":     1,
-	"InsightsAllRepos":       1,
-	"Quicklinks":             1,
 	"Motd":                   1,
-	"Extensions":             1,
 	"ExperimentalFeatures":   1,
 }
 

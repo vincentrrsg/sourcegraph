@@ -172,14 +172,11 @@ export function mergeSettings<S extends Settings>(values: S[]): S | null {
         return null
     }
     const customFunctions: CustomMergeFunctions = {
-        extensions: (base: any, add: any) => ({ ...base, ...add }),
         experimentalFeatures: (base: any, add: any) => ({ ...base, ...add }),
         notices: (base: any, add: any) => [...base, ...add],
         'search.scopes': (base: any, add: any) => [...base, ...add],
         'search.savedQueries': (base: any, add: any) => [...base, ...add],
         'search.repositoryGroups': (base: any, add: any) => ({ ...base, ...add }),
-        'insights.dashboards': (base: any, add: any) => ({ ...base, ...add }),
-        'insights.allrepos': (base: any, add: any) => ({ ...base, ...add }),
         quicklinks: (base: any, add: any) => [...base, ...add],
     }
     const target = cloneDeep(values[0])

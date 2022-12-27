@@ -611,7 +611,7 @@ commands:
       mkdir -p $BLOBSTORE_LOGS
       mkdir -p $BLOBSTORE_DISK
       chmod u+rwx $BLOBSTORE_LOGS $BLOBSTORE_DISK
-      CACHE=true ./docker-images/blobstore/build.sh >$BLOBSTORE_LOG_FILE 2>&1
+      #CACHE=true ./docker-images/blobstore/build.sh >$BLOBSTORE_LOG_FILE 2>&1
     env:
       BLOBSTORE_DISK: $HOME/.sourcegraph-dev/data/blobstore
       BLOBSTORE_LOGS: $HOME/.sourcegraph-dev/logs/blobstore

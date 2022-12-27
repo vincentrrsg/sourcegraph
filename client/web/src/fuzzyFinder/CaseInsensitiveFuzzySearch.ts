@@ -1,10 +1,21 @@
-import { extendedMatch, Fzf } from 'fzf'
+import { extendedMatch, Fzf, FzfResultItem, Tiebreaker } from 'fzf'
 
 import { HighlightedLinkProps, RangePosition } from '../components/fuzzyFinder/HighlightedLink'
 
 import { FuzzySearch, FuzzySearchParameters, FuzzySearchResult, SearchValue } from './FuzzySearch'
 import { createUrlFunction } from './WordSensitiveFuzzySearch'
 
+function sortByTiebreakers<T>(values: FzfResultItem<T>[], tiebreakers: Tiebreaker<T>[]): FzfResultItem<T>[] {
+    return values.sort((a, b) => {
+        for (const tiebreaker of tiebreakers) {
+            const compareResult = tiebreaker(a, b, () => '')
+            if (compareResult !== 0) {
+                return compareResult
+            }
+        }
+        return 0
+    })
+}
 /**
  * FuzzySearch implementation that uses the original fzy filtering algorithm from https://github.com/jhawthorn/fzy.js
  */
@@ -17,13 +28,24 @@ export class CaseInsensitiveFuzzySearch extends FuzzySearch {
     }
 
     public search(parameters: FuzzySearchParameters): FuzzySearchResult {
+        const tiebreakers: Tiebreaker<SearchValue>[] = [
+            (a, b) => (b.item?.ranking ?? 0) - (a.item?.ranking ?? 0),
+            (a, b) => (b.item?.ranking2 ?? 0) - (a.item?.ranking2 ?? 0),
+        ]
         const fzf = new Fzf<SearchValue[]>(this.values, {
             selector: ({ text }) => text,
             limit: parameters.maxResults,
             match: extendedMatch,
-            tiebreakers: [(a, b) => (b.item?.ranking ?? 0) - (a.item?.ranking ?? 0)],
+            tiebreakers,
         })
-        const candidates = fzf.find(parameters.query)
+        const isEmpty = parameters.query === ''
+        const candidates = isEmpty
+            ? sortByTiebreakers(
+                  this.values.map(value => ({ item: value, positions: new Set(), start: 0, end: 0, score: 0 })),
+                  tiebreakers
+              )
+            : fzf.find(parameters.query)
+        console.log({ query: parameters.query, candidates: candidates.map(x => x.item.url) })
         // this.cacheCandidates.push(new CacheCandidate(parameters.query, [...candidates.map(({ item }) => item)]))
         const isComplete = candidates.length < parameters.maxResults
         candidates.slice(0, parameters.maxResults)

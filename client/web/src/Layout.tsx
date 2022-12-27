@@ -61,6 +61,7 @@ import { getExperimentalFeatures } from './util/get-experimental-features'
 import { parseBrowserRepoURL } from './util/url'
 
 import styles from './Layout.module.scss'
+import { useUserHistory } from './components/useUserHistory'
 
 export interface LayoutProps
     extends RouteComponentProps<{}>,
@@ -126,6 +127,7 @@ export const Layout: React.FunctionComponent<React.PropsWithChildren<LayoutProps
     const isRepositoryRelatedPage = routeMatch === '/:repoRevAndRest+' ?? false
 
     // enable fuzzy finder by default unless it's explicitly disabled in settings
+    const userHistory = useUserHistory(props.history)
     const fuzzyFinder = getExperimentalFeatures(props.settingsCascade.final).fuzzyFinder ?? true
     const [isFuzzyFinderVisible, setFuzzyFinderVisible] = useState(false)
 
@@ -315,6 +317,7 @@ export const Layout: React.FunctionComponent<React.PropsWithChildren<LayoutProps
                     settingsCascade={props.settingsCascade}
                     telemetryService={props.telemetryService}
                     location={props.location}
+                    userHistory={userHistory}
                 />
             )}
         </div>

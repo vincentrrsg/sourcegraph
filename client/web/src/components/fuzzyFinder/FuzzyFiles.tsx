@@ -13,6 +13,7 @@ import {
     FuzzyFinderFilesResult,
     FuzzyFinderFilesVariables,
 } from '../../graphql-operations'
+import { UserHistoryEntry } from '../useUserHistory'
 
 import { FuzzyFSM, newFuzzyFSMFromValues } from './FuzzyFsm'
 import { emptyFuzzyCache, PersistableQueryResult } from './FuzzyLocalCache'
@@ -109,7 +110,8 @@ export class FuzzyRepoFiles {
         private readonly client: ApolloClient<object> | undefined,
         private readonly createURL: createUrlFunction,
         private readonly onNamesChanged: () => void,
-        private readonly repoRevision: FuzzyRepoRevision
+        private readonly repoRevision: FuzzyRepoRevision,
+        private readonly userHistory: React.MutableRefObject<UserHistoryEntry[]>
     ) {}
     public fuzzyFSM(): FuzzyFSM {
         return this.fsm
@@ -133,9 +135,11 @@ export class FuzzyRepoFiles {
             },
         })
         const filenames = response.data.repository?.commit?.fileNames || []
+        const createURL: (x: string) => string = this.createURL ? this.createURL : (x: string): string => x
         const values: SearchValue[] = filenames.map(text => ({
             text,
             icon: fileIcon(text),
+            ranking: this.userHistory.current.find(entry => entry.url === createURL(text))?.lastAccessed,
         }))
         this.updateFSM(newFuzzyFSMFromValues(values, this.createURL))
         this.loopIndexing()
@@ -169,7 +173,8 @@ export class FuzzyFiles extends FuzzyQuery {
     constructor(
         private readonly client: ApolloClient<object> | undefined,
         onNamesChanged: () => void,
-        private readonly repoRevision: React.MutableRefObject<FuzzyRepoRevision>
+        private readonly repoRevision: React.MutableRefObject<FuzzyRepoRevision>,
+        private readonly userHistory: React.MutableRefObject<UserHistoryEntry[]>
     ) {
         // Symbol results should not be cached because stale symbol data is complicated to evict/invalidate.
         super(onNamesChanged, emptyFuzzyCache)
@@ -180,6 +185,7 @@ export class FuzzyFiles extends FuzzyQuery {
             text,
             url,
             icon: fileIcon(text),
+            ranking: this.userHistory.current.find(entry => entry.url === url)?.lastAccessed,
         }))
     }
 

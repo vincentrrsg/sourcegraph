@@ -10,6 +10,7 @@ import { FuzzyFinderRepoResult, FuzzyFinderRepoVariables } from '../../graphql-o
 
 import { FuzzyWebCache, PersistableQueryResult } from './FuzzyLocalCache'
 import { FuzzyQuery } from './FuzzyQuery'
+import { UserHistoryEntry } from '../useUserHistory'
 
 export const FUZZY_REPOS_QUERY = gql`
     query FuzzyFinderRepo($query: String!) {
@@ -25,7 +26,11 @@ export const FUZZY_REPOS_QUERY = gql`
 `
 
 export class FuzzyRepos extends FuzzyQuery {
-    constructor(private readonly client: ApolloClient<object> | undefined, onNamesChanged: () => void) {
+    constructor(
+        private readonly client: ApolloClient<object> | undefined,
+        onNamesChanged: () => void,
+        private userHistory: React.MutableRefObject<UserHistoryEntry[]>
+    ) {
         super(onNamesChanged, new FuzzyWebCache('fuzzy-finder.repository-names', values => this.staleResults(values)))
     }
 
@@ -38,6 +43,10 @@ export class FuzzyRepos extends FuzzyQuery {
             const formattedRepositoryStarCount = formatRepositoryStarCount(stars)
             const icon = <CodeHostIcon repoName={text} />
 
+            const ranking: number | undefined = this.userHistory.current.find(entry => entry.url === url)?.lastAccessed
+            if (ranking) {
+                console.log({ ranking, url })
+            }
             return {
                 text,
                 url,
@@ -49,7 +58,8 @@ export class FuzzyRepos extends FuzzyQuery {
                             <span aria-hidden={true}>{formattedRepositoryStarCount}</span>
                         </span>
                     ) : undefined,
-                ranking: stars,
+                ranking,
+                ranking2: stars,
             }
         })
     }

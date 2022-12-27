@@ -18,6 +18,7 @@ import { FuzzyFSM } from './FuzzyFsm'
 import { FuzzyRepoRevision } from './FuzzyRepoRevision'
 import { FuzzyRepos } from './FuzzyRepos'
 import { FuzzySymbols } from './FuzzySymbols'
+import { UserHistoryEntry } from '../useUserHistory'
 
 class Tab {
     constructor(
@@ -215,6 +216,7 @@ export interface FuzzyTabsProps extends FuzzyActionProps {
     client?: ApolloClient<object>
     initialQuery?: string
     isVisible: boolean
+    userHistory: UserHistoryEntry[]
 }
 
 export function useFuzzyState(props: FuzzyTabsProps): FuzzyState {
@@ -241,6 +243,9 @@ export function useFuzzyState(props: FuzzyTabsProps): FuzzyState {
         repoName = ''
         revision = ''
     }
+
+    const userHistoryRef = useRef(props.userHistory)
+    userHistoryRef.current = props.userHistory
 
     const repoRevision: FuzzyRepoRevision = useMemo(
         () => ({ repositoryName: repoName, revision }),
@@ -296,7 +301,7 @@ export function useFuzzyState(props: FuzzyTabsProps): FuzzyState {
 
     // Repos
     const repos = useMemo<FuzzyTabFSM>(() => {
-        const fsm = new FuzzyRepos(apolloClient, incrementFsmRenderGeneration)
+        const fsm = new FuzzyRepos(apolloClient, incrementFsmRenderGeneration, userHistoryRef)
         return new FuzzyTabFSM(
             'repos',
             'everywhere',
@@ -312,7 +317,8 @@ export function useFuzzyState(props: FuzzyTabsProps): FuzzyState {
             incrementFsmRenderGeneration,
             repoRevisionRef,
             false,
-            settingsCascade
+            settingsCascade,
+            userHistoryRef
         )
         return new FuzzyTabFSM(
             'symbols',
@@ -322,7 +328,14 @@ export function useFuzzyState(props: FuzzyTabsProps): FuzzyState {
         )
     }, [apolloClient, incrementFsmRenderGeneration, settingsCascade])
     const globalSymbols = useMemo<FuzzyTabFSM>(() => {
-        const fsm = new FuzzySymbols(apolloClient, incrementFsmRenderGeneration, repoRevisionRef, true, settingsCascade)
+        const fsm = new FuzzySymbols(
+            apolloClient,
+            incrementFsmRenderGeneration,
+            repoRevisionRef,
+            true,
+            settingsCascade,
+            userHistoryRef
+        )
         return new FuzzyTabFSM(
             'symbols',
             'everywhere',
@@ -333,7 +346,13 @@ export function useFuzzyState(props: FuzzyTabsProps): FuzzyState {
 
     // Files
     const localFiles = useMemo<FuzzyTabFSM>(() => {
-        const fsm = new FuzzyRepoFiles(apolloClient, createURL, incrementFsmRenderGeneration, repoRevisionRef.current)
+        const fsm = new FuzzyRepoFiles(
+            apolloClient,
+            createURL,
+            incrementFsmRenderGeneration,
+            repoRevisionRef.current,
+            userHistoryRef
+        )
         return new FuzzyTabFSM(
             'files',
             'repository',
@@ -342,7 +361,7 @@ export function useFuzzyState(props: FuzzyTabsProps): FuzzyState {
         )
     }, [apolloClient, incrementFsmRenderGeneration, createURL])
     const globalFiles = useMemo<FuzzyTabFSM>(() => {
-        const fsm = new FuzzyFiles(apolloClient, incrementFsmRenderGeneration, repoRevisionRef)
+        const fsm = new FuzzyFiles(apolloClient, incrementFsmRenderGeneration, repoRevisionRef, userHistoryRef)
         return new FuzzyTabFSM(
             'files',
             'everywhere',

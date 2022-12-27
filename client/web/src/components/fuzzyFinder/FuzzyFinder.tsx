@@ -44,6 +44,10 @@ export const FuzzyFinderContainer: React.FunctionComponent<FuzzyFinderContainerP
     const activeTabRef = useRef(activeTab)
     activeTabRef.current = activeTab
 
+    useEffect(() => {
+        console.log(props.userHistory)
+    }, [props.userHistory])
+
     const openFuzzyFinder = useCallback(
         (tab: FuzzyTabKey): void => {
             if (tabsRef.current.isOnlyFilesEnabled() && !repositoryName.current) {

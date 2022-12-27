@@ -12,6 +12,7 @@ import { SearchValue } from '../../fuzzyFinder/FuzzySearch'
 import { emptyFuzzyCache, PersistableQueryResult } from './FuzzyLocalCache'
 import { FuzzyQuery } from './FuzzyQuery'
 import { FuzzyRepoRevision, fuzzyRepoRevisionSearchFilter } from './FuzzyRepoRevision'
+import { UserHistoryEntry } from '../useUserHistory'
 
 export const FUZZY_SYMBOLS_QUERY = gql`
     fragment FileMatchFields on FileMatch {
@@ -44,13 +45,18 @@ export const FUZZY_SYMBOLS_QUERY = gql`
     }
 `
 
+function stripSearchParameters(url: string): string {
+    return new URL(url).pathname
+}
+
 export class FuzzySymbols extends FuzzyQuery {
     constructor(
         private readonly client: ApolloClient<object> | undefined,
         onNamesChanged: () => void,
         private readonly repoRevision: React.MutableRefObject<FuzzyRepoRevision>,
         private readonly isGlobalSymbols: boolean,
-        private readonly settingsCascade: SettingsCascadeOrError
+        private readonly settingsCascade: SettingsCascadeOrError,
+        private readonly userHistory: React.MutableRefObject<UserHistoryEntry[]>
     ) {
         // Symbol results should not be cached because stale symbol data is complicated to evict/invalidate.
         super(onNamesChanged, emptyFuzzyCache)
@@ -70,6 +76,8 @@ export class FuzzySymbols extends FuzzyQuery {
         return values.map(({ text, url, symbolKind }) => ({
             text: repositoryFilter ? text.replace(repositoryText, '') : text,
             url,
+            ranking: this.userHistory.current.find(entry => url && entry.url === new URL('https://' + url).pathname)
+                ?.lastAccessed,
             icon: symbolKind ? (
                 <SymbolKind kind={symbolKind} className="mr-1" symbolKindTags={symbolKindTags} />
             ) : undefined,

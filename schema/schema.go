@@ -623,7 +623,7 @@ type ExpandedGitCommitDescription struct {
 	Message string `json:"message"`
 }
 
-// ExperimentalFeatures description: Experimental features to enable or disable. Features that are now enabled by default are marked as deprecated.
+// ExperimentalFeatures description: Experimental features and settings.
 type ExperimentalFeatures struct {
 	// AndOrQuery description: DEPRECATED: Interpret a search input query as an and/or query.
 	AndOrQuery string `json:"andOrQuery,omitempty"`
@@ -698,7 +698,109 @@ type ExperimentalFeatures struct {
 	//
 	// JSON array of version context configuration
 	VersionContexts []*VersionContext `json:"versionContexts,omitempty"`
+	// Additional properties on the object not explicitly defined in the JSON Schema.
+	Additional map[string]any `json:"-"`
 }
+
+func (v ExperimentalFeatures) MarshalJSON() ([]byte, error) {
+	m := make(map[string]any, len(v.Additional)+36)
+	for k, v := range v.Additional {
+		m[k] = v
+	}
+	m["andOrQuery"] = v.AndOrQuery
+	m["apidocs.search.indexing"] = v.ApidocsSearchIndexing
+	m["bitbucketServerFastPerm"] = v.BitbucketServerFastPerm
+	m["customGitFetch"] = v.CustomGitFetch
+	m["debug.log"] = v.DebugLog
+	m["enableGitServerCommandExecFilter"] = v.EnableGitServerCommandExecFilter
+	m["enableGithubInternalRepoVisibility"] = v.EnableGithubInternalRepoVisibility
+	m["enableLegacyExtensions"] = v.EnableLegacyExtensions
+	m["enablePermissionsWebhooks"] = v.EnablePermissionsWebhooks
+	m["enablePostSignupFlow"] = v.EnablePostSignupFlow
+	m["enableWebhookRepoSync"] = v.EnableWebhookRepoSync
+	m["eventLogging"] = v.EventLogging
+	m["gerrit"] = v.Gerrit
+	m["gitServerPinnedRepos"] = v.GitServerPinnedRepos
+	m["goPackages"] = v.GoPackages
+	m["insightsAlternateLoadingStrategy"] = v.InsightsAlternateLoadingStrategy
+	m["insightsBackfillerV2"] = v.InsightsBackfillerV2
+	m["jvmPackages"] = v.JvmPackages
+	m["npmPackages"] = v.NpmPackages
+	m["pagure"] = v.Pagure
+	m["passwordPolicy"] = v.PasswordPolicy
+	m["perforce"] = v.Perforce
+	m["pythonPackages"] = v.PythonPackages
+	m["ranking"] = v.Ranking
+	m["rateLimitAnonymous"] = v.RateLimitAnonymous
+	m["rubyPackages"] = v.RubyPackages
+	m["rustPackages"] = v.RustPackages
+	m["search.index.branches"] = v.SearchIndexBranches
+	m["search.index.query.contexts"] = v.SearchIndexQueryContexts
+	m["search.index.revisions"] = v.SearchIndexRevisions
+	m["search.sanitization"] = v.SearchSanitization
+	m["searchMultipleRevisionsPerRepository"] = v.SearchMultipleRevisionsPerRepository
+	m["structuralSearch"] = v.StructuralSearch
+	m["subRepoPermissions"] = v.SubRepoPermissions
+	m["tls.external"] = v.TlsExternal
+	m["versionContexts"] = v.VersionContexts
+	return json.Marshal(m)
+}
+func (v *ExperimentalFeatures) UnmarshalJSON(data []byte) error {
+	type wrapper ExperimentalFeatures
+	var s wrapper
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*v = ExperimentalFeatures(s)
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+	delete(m, "andOrQuery")
+	delete(m, "apidocs.search.indexing")
+	delete(m, "bitbucketServerFastPerm")
+	delete(m, "customGitFetch")
+	delete(m, "debug.log")
+	delete(m, "enableGitServerCommandExecFilter")
+	delete(m, "enableGithubInternalRepoVisibility")
+	delete(m, "enableLegacyExtensions")
+	delete(m, "enablePermissionsWebhooks")
+	delete(m, "enablePostSignupFlow")
+	delete(m, "enableWebhookRepoSync")
+	delete(m, "eventLogging")
+	delete(m, "gerrit")
+	delete(m, "gitServerPinnedRepos")
+	delete(m, "goPackages")
+	delete(m, "insightsAlternateLoadingStrategy")
+	delete(m, "insightsBackfillerV2")
+	delete(m, "jvmPackages")
+	delete(m, "npmPackages")
+	delete(m, "pagure")
+	delete(m, "passwordPolicy")
+	delete(m, "perforce")
+	delete(m, "pythonPackages")
+	delete(m, "ranking")
+	delete(m, "rateLimitAnonymous")
+	delete(m, "rubyPackages")
+	delete(m, "rustPackages")
+	delete(m, "search.index.branches")
+	delete(m, "search.index.query.contexts")
+	delete(m, "search.index.revisions")
+	delete(m, "search.sanitization")
+	delete(m, "searchMultipleRevisionsPerRepository")
+	delete(m, "structuralSearch")
+	delete(m, "subRepoPermissions")
+	delete(m, "tls.external")
+	delete(m, "versionContexts")
+	if len(m) > 0 {
+		v.Additional = make(map[string]any, len(m))
+	}
+	for k, vv := range m {
+		v.Additional[k] = vv
+	}
+	return nil
+}
+
 type ExportUsageTelemetry struct {
 	// BatchSize description: Maximum number of events scraped from the events table in a single scrape.
 	BatchSize int `json:"batchSize,omitempty"`
@@ -1812,7 +1914,7 @@ type Settings struct {
 	CodeIntelligenceClickToGoToDefinition bool `json:"codeIntelligence.clickToGoToDefinition,omitempty"`
 	// CodeIntelligenceMaxPanelResults description: Maximum number of references/definitions (or other code intelligence results provided by extensions) shown in the panel. If not set a default value will be used to ensure best performance.
 	CodeIntelligenceMaxPanelResults int `json:"codeIntelligence.maxPanelResults,omitempty"`
-	// ExperimentalFeatures description: Experimental features to enable or disable. Features that are now enabled by default are marked as deprecated.
+	// ExperimentalFeatures description: Experimental features and settings.
 	ExperimentalFeatures *SettingsExperimentalFeatures `json:"experimentalFeatures,omitempty"`
 	// Extensions description: The Sourcegraph extensions to use. Enable an extension by adding a property `"my/extension": true` (where `my/extension` is the extension ID). Override a previously enabled extension and disable it by setting its value to `false`.
 	Extensions map[string]bool `json:"extensions,omitempty"`
@@ -1883,9 +1985,136 @@ type Settings struct {
 	SearchScopes []*SearchScope `json:"search.scopes,omitempty"`
 	// SearchUppercase description: REMOVED. Previously, when active, any uppercase characters in the pattern will make the entire query case-sensitive.
 	SearchUppercase *bool `json:"search.uppercase,omitempty"`
+	// Additional properties on the object not explicitly defined in the JSON Schema.
+	Additional map[string]any `json:"-"`
 }
 
-// SettingsExperimentalFeatures description: Experimental features to enable or disable. Features that are now enabled by default are marked as deprecated.
+func (v Settings) MarshalJSON() ([]byte, error) {
+	m := make(map[string]any, len(v.Additional)+49)
+	for k, v := range v.Additional {
+		m[k] = v
+	}
+	m["alerts.codeHostIntegrationMessaging"] = v.AlertsCodeHostIntegrationMessaging
+	m["alerts.hideObservabilitySiteAlerts"] = v.AlertsHideObservabilitySiteAlerts
+	m["alerts.showPatchUpdates"] = v.AlertsShowPatchUpdates
+	m["basicCodeIntel.globalSearchesEnabled"] = v.BasicCodeIntelGlobalSearchesEnabled
+	m["basicCodeIntel.includeArchives"] = v.BasicCodeIntelIncludeArchives
+	m["basicCodeIntel.includeForks"] = v.BasicCodeIntelIncludeForks
+	m["basicCodeIntel.indexOnly"] = v.BasicCodeIntelIndexOnly
+	m["basicCodeIntel.unindexedSearchTimeout"] = v.BasicCodeIntelUnindexedSearchTimeout
+	m["codeIntel.blobKeyboardNavigation"] = v.CodeIntelBlobKeyboardNavigation
+	m["codeIntel.disableRangeQueries"] = v.CodeIntelDisableRangeQueries
+	m["codeIntel.disableSearchBased"] = v.CodeIntelDisableSearchBased
+	m["codeIntel.mixPreciseAndSearchBasedReferences"] = v.CodeIntelMixPreciseAndSearchBasedReferences
+	m["codeIntel.referencesPanel"] = v.CodeIntelReferencesPanel
+	m["codeIntel.traceExtension"] = v.CodeIntelTraceExtension
+	m["codeIntelligence.autoIndexPopularRepoLimit"] = v.CodeIntelligenceAutoIndexPopularRepoLimit
+	m["codeIntelligence.autoIndexRepositoryGroups"] = v.CodeIntelligenceAutoIndexRepositoryGroups
+	m["codeIntelligence.clickToGoToDefinition"] = v.CodeIntelligenceClickToGoToDefinition
+	m["codeIntelligence.maxPanelResults"] = v.CodeIntelligenceMaxPanelResults
+	m["experimentalFeatures"] = v.ExperimentalFeatures
+	m["extensions"] = v.Extensions
+	m["extensions.activeLoggers"] = v.ExtensionsActiveLoggers
+	m["fileSidebarVisibleByDefault"] = v.FileSidebarVisibleByDefault
+	m["history.defaultPageSize"] = v.HistoryDefaultPageSize
+	m["history.preferAbsoluteTimestamps"] = v.HistoryPreferAbsoluteTimestamps
+	m["insights"] = v.Insights
+	m["insights.aggregations.extendedTimeout"] = v.InsightsAggregationsExtendedTimeout
+	m["insights.allrepos"] = v.InsightsAllrepos
+	m["insights.dashboards"] = v.InsightsDashboards
+	m["insights.displayLocation.directory"] = v.InsightsDisplayLocationDirectory
+	m["insights.displayLocation.homepage"] = v.InsightsDisplayLocationHomepage
+	m["insights.displayLocation.insightsPage"] = v.InsightsDisplayLocationInsightsPage
+	m["motd"] = v.Motd
+	m["notices"] = v.Notices
+	m["openInEditor"] = v.OpenInEditor
+	m["perforce.codeHostToSwarmMap"] = v.PerforceCodeHostToSwarmMap
+	m["quicklinks"] = v.Quicklinks
+	m["search.contextLines"] = v.SearchContextLines
+	m["search.defaultCaseSensitive"] = v.SearchDefaultCaseSensitive
+	m["search.defaultMode"] = v.SearchDefaultMode
+	m["search.defaultPatternType"] = v.SearchDefaultPatternType
+	m["search.globbing"] = v.SearchGlobbing
+	m["search.hideSuggestions"] = v.SearchHideSuggestions
+	m["search.includeArchived"] = v.SearchIncludeArchived
+	m["search.includeForks"] = v.SearchIncludeForks
+	m["search.migrateParser"] = v.SearchMigrateParser
+	m["search.repositoryGroups"] = v.SearchRepositoryGroups
+	m["search.savedQueries"] = v.SearchSavedQueries
+	m["search.scopes"] = v.SearchScopes
+	m["search.uppercase"] = v.SearchUppercase
+	return json.Marshal(m)
+}
+func (v *Settings) UnmarshalJSON(data []byte) error {
+	type wrapper Settings
+	var s wrapper
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*v = Settings(s)
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+	delete(m, "alerts.codeHostIntegrationMessaging")
+	delete(m, "alerts.hideObservabilitySiteAlerts")
+	delete(m, "alerts.showPatchUpdates")
+	delete(m, "basicCodeIntel.globalSearchesEnabled")
+	delete(m, "basicCodeIntel.includeArchives")
+	delete(m, "basicCodeIntel.includeForks")
+	delete(m, "basicCodeIntel.indexOnly")
+	delete(m, "basicCodeIntel.unindexedSearchTimeout")
+	delete(m, "codeIntel.blobKeyboardNavigation")
+	delete(m, "codeIntel.disableRangeQueries")
+	delete(m, "codeIntel.disableSearchBased")
+	delete(m, "codeIntel.mixPreciseAndSearchBasedReferences")
+	delete(m, "codeIntel.referencesPanel")
+	delete(m, "codeIntel.traceExtension")
+	delete(m, "codeIntelligence.autoIndexPopularRepoLimit")
+	delete(m, "codeIntelligence.autoIndexRepositoryGroups")
+	delete(m, "codeIntelligence.clickToGoToDefinition")
+	delete(m, "codeIntelligence.maxPanelResults")
+	delete(m, "experimentalFeatures")
+	delete(m, "extensions")
+	delete(m, "extensions.activeLoggers")
+	delete(m, "fileSidebarVisibleByDefault")
+	delete(m, "history.defaultPageSize")
+	delete(m, "history.preferAbsoluteTimestamps")
+	delete(m, "insights")
+	delete(m, "insights.aggregations.extendedTimeout")
+	delete(m, "insights.allrepos")
+	delete(m, "insights.dashboards")
+	delete(m, "insights.displayLocation.directory")
+	delete(m, "insights.displayLocation.homepage")
+	delete(m, "insights.displayLocation.insightsPage")
+	delete(m, "motd")
+	delete(m, "notices")
+	delete(m, "openInEditor")
+	delete(m, "perforce.codeHostToSwarmMap")
+	delete(m, "quicklinks")
+	delete(m, "search.contextLines")
+	delete(m, "search.defaultCaseSensitive")
+	delete(m, "search.defaultMode")
+	delete(m, "search.defaultPatternType")
+	delete(m, "search.globbing")
+	delete(m, "search.hideSuggestions")
+	delete(m, "search.includeArchived")
+	delete(m, "search.includeForks")
+	delete(m, "search.migrateParser")
+	delete(m, "search.repositoryGroups")
+	delete(m, "search.savedQueries")
+	delete(m, "search.scopes")
+	delete(m, "search.uppercase")
+	if len(m) > 0 {
+		v.Additional = make(map[string]any, len(m))
+	}
+	for k, vv := range m {
+		v.Additional[k] = vv
+	}
+	return nil
+}
+
+// SettingsExperimentalFeatures description: Experimental features and settings.
 type SettingsExperimentalFeatures struct {
 	// ApiDocs description: Deprecated.
 	ApiDocs *bool `json:"apiDocs,omitempty"`
@@ -2002,6 +2231,151 @@ type SettingsExperimentalFeatures struct {
 	SymbolKindTags bool `json:"symbolKindTags,omitempty"`
 	// TreeSitterEnabled description: DEPRECATED: Enables tree sitter for enabled filetypes.
 	TreeSitterEnabled *bool `json:"treeSitterEnabled,omitempty"`
+	// Additional properties on the object not explicitly defined in the JSON Schema.
+	Additional map[string]any `json:"-"`
+}
+
+func (v SettingsExperimentalFeatures) MarshalJSON() ([]byte, error) {
+	m := make(map[string]any, len(v.Additional)+58)
+	for k, v := range v.Additional {
+		m[k] = v
+	}
+	m["apiDocs"] = v.ApiDocs
+	m["applySearchQuerySuggestionOnEnter"] = v.ApplySearchQuerySuggestionOnEnter
+	m["batchChangesExecution"] = v.BatchChangesExecution
+	m["clientSearchResultRanking"] = v.ClientSearchResultRanking
+	m["codeInsights"] = v.CodeInsights
+	m["codeInsightsAllRepos"] = v.CodeInsightsAllRepos
+	m["codeInsightsCompute"] = v.CodeInsightsCompute
+	m["codeInsightsGqlApi"] = v.CodeInsightsGqlApi
+	m["codeInsightsLandingPage"] = v.CodeInsightsLandingPage
+	m["codeInsightsRepoUI"] = v.CodeInsightsRepoUI
+	m["codeIntelRepositoryBadge"] = v.CodeIntelRepositoryBadge
+	m["codeMonitoring"] = v.CodeMonitoring
+	m["codeMonitoringWebHooks"] = v.CodeMonitoringWebHooks
+	m["codeNavigation"] = v.CodeNavigation
+	m["coolCodeIntel"] = v.CoolCodeIntel
+	m["copyQueryButton"] = v.CopyQueryButton
+	m["editor"] = v.Editor
+	m["enableCodeMirrorFileView"] = v.EnableCodeMirrorFileView
+	m["enableFastResultLoading"] = v.EnableFastResultLoading
+	m["enableGoImportsSearchQueryTransform"] = v.EnableGoImportsSearchQueryTransform
+	m["enableLazyBlobSyntaxHighlighting"] = v.EnableLazyBlobSyntaxHighlighting
+	m["enableLazyFileResultSyntaxHighlighting"] = v.EnableLazyFileResultSyntaxHighlighting
+	m["enableMergedFileSymbolSidebar"] = v.EnableMergedFileSymbolSidebar
+	m["enableSearchFilePrefetch"] = v.EnableSearchFilePrefetch
+	m["enableSearchStack"] = v.EnableSearchStack
+	m["enableSidebarFilePrefetch"] = v.EnableSidebarFilePrefetch
+	m["enableSmartQuery"] = v.EnableSmartQuery
+	m["fuzzyFinder"] = v.FuzzyFinder
+	m["fuzzyFinderActions"] = v.FuzzyFinderActions
+	m["fuzzyFinderAll"] = v.FuzzyFinderAll
+	m["fuzzyFinderCaseInsensitiveFileCountThreshold"] = v.FuzzyFinderCaseInsensitiveFileCountThreshold
+	m["fuzzyFinderNavbar"] = v.FuzzyFinderNavbar
+	m["fuzzyFinderRepositories"] = v.FuzzyFinderRepositories
+	m["fuzzyFinderSymbols"] = v.FuzzyFinderSymbols
+	m["goCodeCheckerTemplates"] = v.GoCodeCheckerTemplates
+	m["homePanelsComputeSuggestions"] = v.HomePanelsComputeSuggestions
+	m["homepageUserInvitation"] = v.HomepageUserInvitation
+	m["insightsAlternateLoadingStrategy"] = v.InsightsAlternateLoadingStrategy
+	m["preloadGoToDefinition"] = v.PreloadGoToDefinition
+	m["proactiveSearchResultsAggregations"] = v.ProactiveSearchResultsAggregations
+	m["searchContextsQuery"] = v.SearchContextsQuery
+	m["searchQueryInput"] = v.SearchQueryInput
+	m["searchResultsAggregations"] = v.SearchResultsAggregations
+	m["searchStats"] = v.SearchStats
+	m["searchStreaming"] = v.SearchStreaming
+	m["showCodeMonitoringLogs"] = v.ShowCodeMonitoringLogs
+	m["showCodeMonitoringTestEmailButton"] = v.ShowCodeMonitoringTestEmailButton
+	m["showComputeComponent"] = v.ShowComputeComponent
+	m["showEnterpriseHomePanels"] = v.ShowEnterpriseHomePanels
+	m["showMultilineSearchConsole"] = v.ShowMultilineSearchConsole
+	m["showOnboardingTour"] = v.ShowOnboardingTour
+	m["showQueryBuilder"] = v.ShowQueryBuilder
+	m["showRepogroupHomepage"] = v.ShowRepogroupHomepage
+	m["showSearchContext"] = v.ShowSearchContext
+	m["showSearchContextManagement"] = v.ShowSearchContextManagement
+	m["showSearchNotebook"] = v.ShowSearchNotebook
+	m["symbolKindTags"] = v.SymbolKindTags
+	m["treeSitterEnabled"] = v.TreeSitterEnabled
+	return json.Marshal(m)
+}
+func (v *SettingsExperimentalFeatures) UnmarshalJSON(data []byte) error {
+	type wrapper SettingsExperimentalFeatures
+	var s wrapper
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*v = SettingsExperimentalFeatures(s)
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+	delete(m, "apiDocs")
+	delete(m, "applySearchQuerySuggestionOnEnter")
+	delete(m, "batchChangesExecution")
+	delete(m, "clientSearchResultRanking")
+	delete(m, "codeInsights")
+	delete(m, "codeInsightsAllRepos")
+	delete(m, "codeInsightsCompute")
+	delete(m, "codeInsightsGqlApi")
+	delete(m, "codeInsightsLandingPage")
+	delete(m, "codeInsightsRepoUI")
+	delete(m, "codeIntelRepositoryBadge")
+	delete(m, "codeMonitoring")
+	delete(m, "codeMonitoringWebHooks")
+	delete(m, "codeNavigation")
+	delete(m, "coolCodeIntel")
+	delete(m, "copyQueryButton")
+	delete(m, "editor")
+	delete(m, "enableCodeMirrorFileView")
+	delete(m, "enableFastResultLoading")
+	delete(m, "enableGoImportsSearchQueryTransform")
+	delete(m, "enableLazyBlobSyntaxHighlighting")
+	delete(m, "enableLazyFileResultSyntaxHighlighting")
+	delete(m, "enableMergedFileSymbolSidebar")
+	delete(m, "enableSearchFilePrefetch")
+	delete(m, "enableSearchStack")
+	delete(m, "enableSidebarFilePrefetch")
+	delete(m, "enableSmartQuery")
+	delete(m, "fuzzyFinder")
+	delete(m, "fuzzyFinderActions")
+	delete(m, "fuzzyFinderAll")
+	delete(m, "fuzzyFinderCaseInsensitiveFileCountThreshold")
+	delete(m, "fuzzyFinderNavbar")
+	delete(m, "fuzzyFinderRepositories")
+	delete(m, "fuzzyFinderSymbols")
+	delete(m, "goCodeCheckerTemplates")
+	delete(m, "homePanelsComputeSuggestions")
+	delete(m, "homepageUserInvitation")
+	delete(m, "insightsAlternateLoadingStrategy")
+	delete(m, "preloadGoToDefinition")
+	delete(m, "proactiveSearchResultsAggregations")
+	delete(m, "searchContextsQuery")
+	delete(m, "searchQueryInput")
+	delete(m, "searchResultsAggregations")
+	delete(m, "searchStats")
+	delete(m, "searchStreaming")
+	delete(m, "showCodeMonitoringLogs")
+	delete(m, "showCodeMonitoringTestEmailButton")
+	delete(m, "showComputeComponent")
+	delete(m, "showEnterpriseHomePanels")
+	delete(m, "showMultilineSearchConsole")
+	delete(m, "showOnboardingTour")
+	delete(m, "showQueryBuilder")
+	delete(m, "showRepogroupHomepage")
+	delete(m, "showSearchContext")
+	delete(m, "showSearchContextManagement")
+	delete(m, "showSearchNotebook")
+	delete(m, "symbolKindTags")
+	delete(m, "treeSitterEnabled")
+	if len(m) > 0 {
+		v.Additional = make(map[string]any, len(m))
+	}
+	for k, vv := range m {
+		v.Additional[k] = vv
+	}
+	return nil
 }
 
 // SettingsOpenInEditor description: Group of settings related to opening files in an editor.
@@ -2156,7 +2530,7 @@ type SiteConfiguration struct {
 	ExecutorsSrcCLIImage string `json:"executors.srcCLIImage,omitempty"`
 	// ExecutorsSrcCLIImageTag description: The tag to use for the src-cli image in executors. Use this value to use a custom tag. Sourcegraph by default uses the best match, so use this setting only if you really need to overwrite it and make sure to keep it updated.
 	ExecutorsSrcCLIImageTag string `json:"executors.srcCLIImageTag,omitempty"`
-	// ExperimentalFeatures description: Experimental features to enable or disable. Features that are now enabled by default are marked as deprecated.
+	// ExperimentalFeatures description: Experimental features and settings.
 	ExperimentalFeatures *ExperimentalFeatures `json:"experimentalFeatures,omitempty"`
 	ExportUsageTelemetry *ExportUsageTelemetry `json:"exportUsageTelemetry,omitempty"`
 	// Extensions description: Configures Sourcegraph extensions.
@@ -2289,6 +2663,275 @@ type SiteConfiguration struct {
 	UserReposMaxPerUser int `json:"userRepos.maxPerUser,omitempty"`
 	// WebhookLogging description: Configuration for logging incoming webhooks.
 	WebhookLogging *WebhookLogging `json:"webhook.logging,omitempty"`
+	// Additional properties on the object not explicitly defined in the JSON Schema.
+	Additional map[string]any `json:"-"`
+}
+
+func (v SiteConfiguration) MarshalJSON() ([]byte, error) {
+	m := make(map[string]any, len(v.Additional)+120)
+	for k, v := range v.Additional {
+		m[k] = v
+	}
+	m["RedirectUnsupportedBrowser"] = v.RedirectUnsupportedBrowser
+	m["api.ratelimit"] = v.ApiRatelimit
+	m["apidocs.search.index-size-limit-factor"] = v.ApidocsSearchIndexSizeLimitFactor
+	m["auth.accessTokens"] = v.AuthAccessTokens
+	m["auth.enableUsernameChanges"] = v.AuthEnableUsernameChanges
+	m["auth.lockout"] = v.AuthLockout
+	m["auth.minPasswordLength"] = v.AuthMinPasswordLength
+	m["auth.passwordPolicy"] = v.AuthPasswordPolicy
+	m["auth.passwordResetLinkExpiry"] = v.AuthPasswordResetLinkExpiry
+	m["auth.providers"] = v.AuthProviders
+	m["auth.public"] = v.AuthPublic
+	m["auth.sessionExpiry"] = v.AuthSessionExpiry
+	m["auth.unlockAccountLinkExpiry"] = v.AuthUnlockAccountLinkExpiry
+	m["auth.unlockAccountLinkSigningKey"] = v.AuthUnlockAccountLinkSigningKey
+	m["auth.userOrgMap"] = v.AuthUserOrgMap
+	m["authz.enforceForSiteAdmins"] = v.AuthzEnforceForSiteAdmins
+	m["authz.refreshInterval"] = v.AuthzRefreshInterval
+	m["authz.syncJobsRecordsTTL"] = v.AuthzSyncJobsRecordsTTL
+	m["batchChanges.changesetsRetention"] = v.BatchChangesChangesetsRetention
+	m["batchChanges.disableWebhooksWarning"] = v.BatchChangesDisableWebhooksWarning
+	m["batchChanges.enabled"] = v.BatchChangesEnabled
+	m["batchChanges.enforceForks"] = v.BatchChangesEnforceForks
+	m["batchChanges.restrictToAdmins"] = v.BatchChangesRestrictToAdmins
+	m["batchChanges.rolloutWindows"] = v.BatchChangesRolloutWindows
+	m["branding"] = v.Branding
+	m["campaigns.enabled"] = v.CampaignsEnabled
+	m["campaigns.restrictToAdmins"] = v.CampaignsRestrictToAdmins
+	m["cloneProgress.log"] = v.CloneProgressLog
+	m["codeIntelAutoIndexing.allowGlobalPolicies"] = v.CodeIntelAutoIndexingAllowGlobalPolicies
+	m["codeIntelAutoIndexing.enabled"] = v.CodeIntelAutoIndexingEnabled
+	m["codeIntelAutoIndexing.indexerMap"] = v.CodeIntelAutoIndexingIndexerMap
+	m["codeIntelAutoIndexing.policyRepositoryMatchLimit"] = v.CodeIntelAutoIndexingPolicyRepositoryMatchLimit
+	m["codeIntelLockfileIndexing.enabled"] = v.CodeIntelLockfileIndexingEnabled
+	m["corsOrigin"] = v.CorsOrigin
+	m["debug.search.symbolsParallelism"] = v.DebugSearchSymbolsParallelism
+	m["defaultRateLimit"] = v.DefaultRateLimit
+	m["disableAutoCodeHostSyncs"] = v.DisableAutoCodeHostSyncs
+	m["disableAutoGitUpdates"] = v.DisableAutoGitUpdates
+	m["disableBuiltInSearches"] = v.DisableBuiltInSearches
+	m["disableNonCriticalTelemetry"] = v.DisableNonCriticalTelemetry
+	m["disablePublicRepoRedirects"] = v.DisablePublicRepoRedirects
+	m["dontIncludeSymbolResultsByDefault"] = v.DontIncludeSymbolResultsByDefault
+	m["dotcom"] = v.Dotcom
+	m["email.address"] = v.EmailAddress
+	m["email.smtp"] = v.EmailSmtp
+	m["email.templates"] = v.EmailTemplates
+	m["encryption.keys"] = v.EncryptionKeys
+	m["executors.accessToken"] = v.ExecutorsAccessToken
+	m["executors.batcheshelperImage"] = v.ExecutorsBatcheshelperImage
+	m["executors.batcheshelperImageTag"] = v.ExecutorsBatcheshelperImageTag
+	m["executors.frontendURL"] = v.ExecutorsFrontendURL
+	m["executors.srcCLIImage"] = v.ExecutorsSrcCLIImage
+	m["executors.srcCLIImageTag"] = v.ExecutorsSrcCLIImageTag
+	m["experimentalFeatures"] = v.ExperimentalFeatures
+	m["exportUsageTelemetry"] = v.ExportUsageTelemetry
+	m["extensions"] = v.Extensions
+	m["externalService.userMode"] = v.ExternalServiceUserMode
+	m["externalURL"] = v.ExternalURL
+	m["git.cloneURLToRepositoryName"] = v.GitCloneURLToRepositoryName
+	m["gitHubApp"] = v.GitHubApp
+	m["gitLongCommandTimeout"] = v.GitLongCommandTimeout
+	m["gitMaxCodehostRequestsPerSecond"] = v.GitMaxCodehostRequestsPerSecond
+	m["gitMaxConcurrentClones"] = v.GitMaxConcurrentClones
+	m["gitUpdateInterval"] = v.GitUpdateInterval
+	m["githubClientID"] = v.GithubClientID
+	m["githubClientSecret"] = v.GithubClientSecret
+	m["htmlBodyBottom"] = v.HtmlBodyBottom
+	m["htmlBodyTop"] = v.HtmlBodyTop
+	m["htmlHeadBottom"] = v.HtmlHeadBottom
+	m["htmlHeadTop"] = v.HtmlHeadTop
+	m["insights.aggregations.bufferSize"] = v.InsightsAggregationsBufferSize
+	m["insights.aggregations.proactiveResultLimit"] = v.InsightsAggregationsProactiveResultLimit
+	m["insights.backfill.interruptAfter"] = v.InsightsBackfillInterruptAfter
+	m["insights.commit.indexer.interval"] = v.InsightsCommitIndexerInterval
+	m["insights.commit.indexer.windowDuration"] = v.InsightsCommitIndexerWindowDuration
+	m["insights.compute.graphql"] = v.InsightsComputeGraphql
+	m["insights.historical.frameLength"] = v.InsightsHistoricalFrameLength
+	m["insights.historical.frames"] = v.InsightsHistoricalFrames
+	m["insights.historical.speedFactor"] = v.InsightsHistoricalSpeedFactor
+	m["insights.historical.worker.rateLimit"] = v.InsightsHistoricalWorkerRateLimit
+	m["insights.maximumSampleSize"] = v.InsightsMaximumSampleSize
+	m["insights.query.worker.concurrency"] = v.InsightsQueryWorkerConcurrency
+	m["insights.query.worker.rateLimit"] = v.InsightsQueryWorkerRateLimit
+	m["insights.query.worker.rateLimitBurst"] = v.InsightsQueryWorkerRateLimitBurst
+	m["insights.search.graphql"] = v.InsightsSearchGraphql
+	m["licenseKey"] = v.LicenseKey
+	m["log"] = v.Log
+	m["lsifEnforceAuth"] = v.LsifEnforceAuth
+	m["maxReposToSearch"] = v.MaxReposToSearch
+	m["observability.alerts"] = v.ObservabilityAlerts
+	m["observability.captureSlowGraphQLRequestsLimit"] = v.ObservabilityCaptureSlowGraphQLRequestsLimit
+	m["observability.client"] = v.ObservabilityClient
+	m["observability.logSlowGraphQLRequests"] = v.ObservabilityLogSlowGraphQLRequests
+	m["observability.logSlowSearches"] = v.ObservabilityLogSlowSearches
+	m["observability.silenceAlerts"] = v.ObservabilitySilenceAlerts
+	m["observability.tracing"] = v.ObservabilityTracing
+	m["organizationInvitations"] = v.OrganizationInvitations
+	m["outboundRequestLogLimit"] = v.OutboundRequestLogLimit
+	m["parentSourcegraph"] = v.ParentSourcegraph
+	m["permissions.syncOldestRepos"] = v.PermissionsSyncOldestRepos
+	m["permissions.syncOldestUsers"] = v.PermissionsSyncOldestUsers
+	m["permissions.syncReposBackoffSeconds"] = v.PermissionsSyncReposBackoffSeconds
+	m["permissions.syncScheduleInterval"] = v.PermissionsSyncScheduleInterval
+	m["permissions.syncUsersBackoffSeconds"] = v.PermissionsSyncUsersBackoffSeconds
+	m["permissions.syncUsersMaxConcurrency"] = v.PermissionsSyncUsersMaxConcurrency
+	m["permissions.userMapping"] = v.PermissionsUserMapping
+	m["productResearchPage.enabled"] = v.ProductResearchPageEnabled
+	m["redactOutboundRequestHeaders"] = v.RedactOutboundRequestHeaders
+	m["repoConcurrentExternalServiceSyncers"] = v.RepoConcurrentExternalServiceSyncers
+	m["repoListUpdateInterval"] = v.RepoListUpdateInterval
+	m["repoPurgeWorker"] = v.RepoPurgeWorker
+	m["search.index.enabled"] = v.SearchIndexEnabled
+	m["search.index.symbols.enabled"] = v.SearchIndexSymbolsEnabled
+	m["search.largeFiles"] = v.SearchLargeFiles
+	m["search.limits"] = v.SearchLimits
+	m["syntaxHighlighting"] = v.SyntaxHighlighting
+	m["update.channel"] = v.UpdateChannel
+	m["userRepos.maxPerSite"] = v.UserReposMaxPerSite
+	m["userRepos.maxPerUser"] = v.UserReposMaxPerUser
+	m["webhook.logging"] = v.WebhookLogging
+	return json.Marshal(m)
+}
+func (v *SiteConfiguration) UnmarshalJSON(data []byte) error {
+	type wrapper SiteConfiguration
+	var s wrapper
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	*v = SiteConfiguration(s)
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
+	delete(m, "RedirectUnsupportedBrowser")
+	delete(m, "api.ratelimit")
+	delete(m, "apidocs.search.index-size-limit-factor")
+	delete(m, "auth.accessTokens")
+	delete(m, "auth.enableUsernameChanges")
+	delete(m, "auth.lockout")
+	delete(m, "auth.minPasswordLength")
+	delete(m, "auth.passwordPolicy")
+	delete(m, "auth.passwordResetLinkExpiry")
+	delete(m, "auth.providers")
+	delete(m, "auth.public")
+	delete(m, "auth.sessionExpiry")
+	delete(m, "auth.unlockAccountLinkExpiry")
+	delete(m, "auth.unlockAccountLinkSigningKey")
+	delete(m, "auth.userOrgMap")
+	delete(m, "authz.enforceForSiteAdmins")
+	delete(m, "authz.refreshInterval")
+	delete(m, "authz.syncJobsRecordsTTL")
+	delete(m, "batchChanges.changesetsRetention")
+	delete(m, "batchChanges.disableWebhooksWarning")
+	delete(m, "batchChanges.enabled")
+	delete(m, "batchChanges.enforceForks")
+	delete(m, "batchChanges.restrictToAdmins")
+	delete(m, "batchChanges.rolloutWindows")
+	delete(m, "branding")
+	delete(m, "campaigns.enabled")
+	delete(m, "campaigns.restrictToAdmins")
+	delete(m, "cloneProgress.log")
+	delete(m, "codeIntelAutoIndexing.allowGlobalPolicies")
+	delete(m, "codeIntelAutoIndexing.enabled")
+	delete(m, "codeIntelAutoIndexing.indexerMap")
+	delete(m, "codeIntelAutoIndexing.policyRepositoryMatchLimit")
+	delete(m, "codeIntelLockfileIndexing.enabled")
+	delete(m, "corsOrigin")
+	delete(m, "debug.search.symbolsParallelism")
+	delete(m, "defaultRateLimit")
+	delete(m, "disableAutoCodeHostSyncs")
+	delete(m, "disableAutoGitUpdates")
+	delete(m, "disableBuiltInSearches")
+	delete(m, "disableNonCriticalTelemetry")
+	delete(m, "disablePublicRepoRedirects")
+	delete(m, "dontIncludeSymbolResultsByDefault")
+	delete(m, "dotcom")
+	delete(m, "email.address")
+	delete(m, "email.smtp")
+	delete(m, "email.templates")
+	delete(m, "encryption.keys")
+	delete(m, "executors.accessToken")
+	delete(m, "executors.batcheshelperImage")
+	delete(m, "executors.batcheshelperImageTag")
+	delete(m, "executors.frontendURL")
+	delete(m, "executors.srcCLIImage")
+	delete(m, "executors.srcCLIImageTag")
+	delete(m, "experimentalFeatures")
+	delete(m, "exportUsageTelemetry")
+	delete(m, "extensions")
+	delete(m, "externalService.userMode")
+	delete(m, "externalURL")
+	delete(m, "git.cloneURLToRepositoryName")
+	delete(m, "gitHubApp")
+	delete(m, "gitLongCommandTimeout")
+	delete(m, "gitMaxCodehostRequestsPerSecond")
+	delete(m, "gitMaxConcurrentClones")
+	delete(m, "gitUpdateInterval")
+	delete(m, "githubClientID")
+	delete(m, "githubClientSecret")
+	delete(m, "htmlBodyBottom")
+	delete(m, "htmlBodyTop")
+	delete(m, "htmlHeadBottom")
+	delete(m, "htmlHeadTop")
+	delete(m, "insights.aggregations.bufferSize")
+	delete(m, "insights.aggregations.proactiveResultLimit")
+	delete(m, "insights.backfill.interruptAfter")
+	delete(m, "insights.commit.indexer.interval")
+	delete(m, "insights.commit.indexer.windowDuration")
+	delete(m, "insights.compute.graphql")
+	delete(m, "insights.historical.frameLength")
+	delete(m, "insights.historical.frames")
+	delete(m, "insights.historical.speedFactor")
+	delete(m, "insights.historical.worker.rateLimit")
+	delete(m, "insights.maximumSampleSize")
+	delete(m, "insights.query.worker.concurrency")
+	delete(m, "insights.query.worker.rateLimit")
+	delete(m, "insights.query.worker.rateLimitBurst")
+	delete(m, "insights.search.graphql")
+	delete(m, "licenseKey")
+	delete(m, "log")
+	delete(m, "lsifEnforceAuth")
+	delete(m, "maxReposToSearch")
+	delete(m, "observability.alerts")
+	delete(m, "observability.captureSlowGraphQLRequestsLimit")
+	delete(m, "observability.client")
+	delete(m, "observability.logSlowGraphQLRequests")
+	delete(m, "observability.logSlowSearches")
+	delete(m, "observability.silenceAlerts")
+	delete(m, "observability.tracing")
+	delete(m, "organizationInvitations")
+	delete(m, "outboundRequestLogLimit")
+	delete(m, "parentSourcegraph")
+	delete(m, "permissions.syncOldestRepos")
+	delete(m, "permissions.syncOldestUsers")
+	delete(m, "permissions.syncReposBackoffSeconds")
+	delete(m, "permissions.syncScheduleInterval")
+	delete(m, "permissions.syncUsersBackoffSeconds")
+	delete(m, "permissions.syncUsersMaxConcurrency")
+	delete(m, "permissions.userMapping")
+	delete(m, "productResearchPage.enabled")
+	delete(m, "redactOutboundRequestHeaders")
+	delete(m, "repoConcurrentExternalServiceSyncers")
+	delete(m, "repoListUpdateInterval")
+	delete(m, "repoPurgeWorker")
+	delete(m, "search.index.enabled")
+	delete(m, "search.index.symbols.enabled")
+	delete(m, "search.largeFiles")
+	delete(m, "search.limits")
+	delete(m, "syntaxHighlighting")
+	delete(m, "update.channel")
+	delete(m, "userRepos.maxPerSite")
+	delete(m, "userRepos.maxPerUser")
+	delete(m, "webhook.logging")
+	if len(m) > 0 {
+		v.Additional = make(map[string]any, len(m))
+	}
+	for k, vv := range m {
+		v.Additional[k] = vv
+	}
+	return nil
 }
 
 // SrcCliVersionCache description: Configuration related to the src-cli version cache. This should only be used on sourcegraph.com.

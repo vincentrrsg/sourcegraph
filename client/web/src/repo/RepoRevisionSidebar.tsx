@@ -5,7 +5,6 @@ import classNames from 'classnames'
 import * as H from 'history'
 
 import { isErrorLike } from '@sourcegraph/common'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { Scalars } from '@sourcegraph/shared/src/graphql-operations'
 import { SettingsCascadeProps } from '@sourcegraph/shared/src/settings/settings'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
@@ -33,7 +32,7 @@ import { RepoRevisionSidebarSymbols } from './RepoRevisionSidebarSymbols'
 
 import styles from './RepoRevisionSidebar.module.scss'
 
-interface RepoRevisionSidebarProps extends RepoFile, ExtensionsControllerProps, TelemetryProps, SettingsCascadeProps {
+interface RepoRevisionSidebarProps extends RepoFile, TelemetryProps, SettingsCascadeProps {
     repoID?: Scalars['ID']
     isDir: boolean
     defaultBranch: string
@@ -162,7 +161,6 @@ export const RepoRevisionSidebar: React.FunctionComponent<
                                         activePath={props.filePath}
                                         activePathIsDir={props.isDir}
                                         sizeKey={`Resizable:${SIZE_STORAGE_KEY}`}
-                                        extensionsController={props.extensionsController}
                                         telemetryService={props.telemetryService}
                                         enableMergedFileSymbolSidebar={!!enableMergedFileSymbolSidebar}
                                     />

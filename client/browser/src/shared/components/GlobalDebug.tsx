@@ -32,7 +32,6 @@ export const GlobalDebug: React.FunctionComponent<React.PropsWithChildren<Props>
             <div className="nav-item">
                 <ShortcutProvider>
                     <ExtensionDevelopmentToolsPopover
-                        extensionsController={props.extensionsController}
                         link={makeExtensionLink(props.sourcegraphURL)}
                         platformContext={props.platformContext}
                     />

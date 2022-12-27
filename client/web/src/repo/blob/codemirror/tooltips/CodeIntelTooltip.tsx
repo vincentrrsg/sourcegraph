@@ -4,7 +4,6 @@ import { map } from 'rxjs/operators'
 
 import { HoverMerged } from '@sourcegraph/client-api'
 import { MarkupKind } from '@sourcegraph/extension-api-classes'
-import { ActionItemAction } from '@sourcegraph/shared/src/actions/ActionItem'
 import { hasFindImplementationsSupport } from '@sourcegraph/shared/src/codeintel/api'
 import { Occurrence } from '@sourcegraph/shared/src/codeintel/scip'
 import { BlobViewState, toPrettyBlobURL } from '@sourcegraph/shared/src/util/url'
@@ -14,6 +13,7 @@ import { HovercardView, HoverData } from '../hovercard'
 import { rangeToCmSelection } from '../occurrence-utils'
 import { DefinitionResult, goToDefinitionAtOccurrence } from '../token-selection/definition'
 import { modifierClickDescription } from '../token-selection/modifier-click'
+import { ActionItemAction } from '@sourcegraph/shared/src/actions/ActionItem'
 
 export interface HoverResult {
     markdownContents: string
@@ -85,6 +85,7 @@ export class CodeIntelTooltip implements Tooltip {
             viewState: 'references',
         })
         const noDefinitionFound = definition.locations.length === 0
+        // TODO(sqs): XXXXXXXXXXXXXXXXXXXX
         const actions: ActionItemAction[] = [
             {
                 active: true,

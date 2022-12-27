@@ -1,10 +1,6 @@
 import * as H from 'history'
 import { Renderer } from 'react-dom'
 
-import {
-    ExtensionsControllerProps,
-    RequiredExtensionsControllerProps,
-} from '@sourcegraph/shared/src/extensions/controller'
 import { createController as createExtensionsController } from '@sourcegraph/shared/src/extensions/createSyncLoadedController'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 
@@ -21,7 +17,7 @@ export function initializeExtensions(
     { urlToFile }: Pick<CodeHost, 'urlToFile'>,
     urls: SourcegraphIntegrationURLs,
     isExtension: boolean
-): { platformContext: BrowserPlatformContext } & ExtensionsControllerProps {
+): { platformContext: BrowserPlatformContext } {
     const platformContext = createPlatformContext({ urlToFile }, urls, isExtension)
     const extensionsController = createExtensionsController(platformContext)
     return { platformContext, extensionsController }
@@ -36,7 +32,6 @@ interface InjectProps
 
 export const renderGlobalDebug =
     ({
-        extensionsController,
         platformContext,
         history,
         render,
@@ -45,7 +40,6 @@ export const renderGlobalDebug =
     (mount: HTMLElement): void => {
         render(
             <GlobalDebug
-                extensionsController={extensionsController}
                 location={history.location}
                 platformContext={platformContext}
                 sourcegraphURL={sourcegraphURL}

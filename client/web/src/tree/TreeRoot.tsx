@@ -16,7 +16,6 @@ import {
 
 import { asError, ErrorLike, isErrorLike, logger } from '@sourcegraph/common'
 import { fetchTreeEntries } from '@sourcegraph/shared/src/backend/repo'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { Scalars, TreeFields } from '@sourcegraph/shared/src/graphql-operations'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 import { AbsoluteRepo } from '@sourcegraph/shared/src/util/url'
@@ -37,7 +36,7 @@ const errorWidth = (width?: string): { width: string } => ({
     width: width ? `${width}px` : 'auto',
 })
 
-export interface TreeRootProps extends AbsoluteRepo, ExtensionsControllerProps, TelemetryProps {
+export interface TreeRootProps extends AbsoluteRepo, TelemetryProps {
     activeNode: TreeNode
     activePath: string
     depth: number

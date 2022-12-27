@@ -58,21 +58,11 @@ import {
     debounceTime,
 } from 'rxjs/operators'
 
-import {
-    addLineRangeQueryParameter,
-    isErrorLike,
-    LineOrPositionOrRange,
-    toPositionOrRangeQueryParameter,
-} from '@sourcegraph/common'
+import { isErrorLike, LineOrPositionOrRange } from '@sourcegraph/common'
 import { createUpdateableField } from '@sourcegraph/shared/src/components/CodeMirrorEditor'
 import { UIPositionSpec, UIRangeSpec } from '@sourcegraph/shared/src/util/url'
 
-import {
-    getClickToGoToDefinition,
-    getGoToURL,
-    WebHoverOverlay,
-    WebHoverOverlayProps,
-} from '../../../components/WebHoverOverlay'
+import { getClickToGoToDefinition, WebHoverOverlay, WebHoverOverlayProps } from '../../../components/WebHoverOverlay'
 import { BlobProps, updateBrowserHistoryIfChanged } from '../Blob'
 
 import { Container } from './react-interop'
@@ -95,7 +85,7 @@ type UIPosition = UIPositionSpec['position']
 /**
  * Hover information received from a hover source.
  */
-export type HoverData = Pick<WebHoverOverlayProps, 'hoverOrError' | 'actionsOrError'>
+export type HoverData = Pick<WebHoverOverlayProps, 'hoverOrError'>
 
 /**
  * A {@link Hovercard} represent a currently visible hovercard.
@@ -599,7 +589,7 @@ export class HovercardView implements TooltipView {
         this.root?.unmount()
     }
 
-    private render(root: Root, { hoverOrError, actionsOrError }: HoverData, props: BlobProps, pinned: boolean): void {
+    private render(root: Root, { hoverOrError }: HoverData, props: BlobProps, pinned: boolean): void {
         const hoverContext = {
             commitID: props.blobInfo.commitID,
             filePath: props.blobInfo.filePath,
@@ -629,15 +619,12 @@ export class HovercardView implements TooltipView {
                 >
                     <WebHoverOverlay
                         // Blob props
-                        location={props.location}
                         onHoverShown={props.onHoverShown}
                         isLightTheme={props.isLightTheme}
                         platformContext={props.platformContext}
                         settingsCascade={props.settingsCascade}
                         telemetryService={props.telemetryService}
-                        extensionsController={props.extensionsController}
                         // Hover props
-                        actionsOrError={actionsOrError}
                         hoverOrError={hoverOrError}
                         // CodeMirror handles the positioning but a
                         // non-nullable value must be passed for the
@@ -653,37 +640,9 @@ export class HovercardView implements TooltipView {
                                 updateBrowserHistoryIfChanged(props.history, props.location, parameters)
                                 this.nextPinned.next(false)
                             },
-                            onCopyLinkButtonClick: async () => {
-                                if (!pinned) {
-                                    // This needs to happen before updating the URL so that we avoid re-creating the hovercard
-                                    this.view.dispatch({
-                                        effects: pinHovercard.of(),
-                                    })
-                                }
-                                const { line, character } = hoveredToken
-                                const position = { line, character }
-
-                                const search = new URLSearchParams(location.search)
-                                search.set('popover', 'pinned')
-
-                                updateBrowserHistoryIfChanged(
-                                    props.history,
-                                    props.location,
-                                    // It may seem strange to set start and end to the same value, but that what's the old blob view is doing as well
-                                    addLineRangeQueryParameter(
-                                        search,
-                                        toPositionOrRangeQueryParameter({
-                                            position,
-                                            range: { start: position, end: position },
-                                        })
-                                    )
-                                )
-                                await navigator.clipboard.writeText(window.location.href)
-
-                                this.nextPinned.next(true)
-                            },
                         }}
                         hoverOverlayContainerClassName="position-relative"
+                        location={props.location}
                     />
                 </div>
             </Container>
@@ -759,17 +718,10 @@ function tokenRangeToHovercard(
                     // `hoverInformation` emits multiple times. We need to
                     // update the hovercard object as new data comes in. We use
                     // `scan` to keep state.
-                    scan((hovercard: Hovercard | null, { hoverOrError, actionsOrError }) => {
-                        // Only render if we either have something for hover or actions. Adapted
+                    scan((hovercard: Hovercard | null, { hoverOrError }) => {
+                        // Only render if we either have something for hover. Adapted
                         // from shouldRenderOverlay in codeintellify/src/hoverifier.ts
-                        if (
-                            !(
-                                (hoverOrError && hoverOrError !== 'loading') ||
-                                (actionsOrError &&
-                                    actionsOrError !== 'loading' &&
-                                    (isErrorLike(actionsOrError) || actionsOrError.length > 0))
-                            )
-                        ) {
+                        if (!(hoverOrError && hoverOrError !== 'loading')) {
                             return null
                         }
 
@@ -784,7 +736,7 @@ function tokenRangeToHovercard(
                             // Adaption of the "click to go to definition" code inside
                             // WebHoverOverlay
                             if (getClickToGoToDefinition(props.settingsCascade)) {
-                                const urlAndType = getGoToURL(actionsOrError, props.location)
+                                const urlAndType = { url: 'TODO(sqs)', actionType: 'asdf' } // TODO(sqs)
                                 if (urlAndType) {
                                     const { url, actionType } = urlAndType
                                     onClick = () => {
@@ -800,12 +752,7 @@ function tokenRangeToHovercard(
                         }
 
                         if (!providerOffset) {
-                            if (
-                                hoverOrError &&
-                                hoverOrError !== 'loading' &&
-                                !isErrorLike(hoverOrError) &&
-                                hoverOrError.range
-                            ) {
+                            if (hoverOrError && !isErrorLike(hoverOrError) && hoverOrError.range) {
                                 const from = positionToOffset(view.state.doc, hoverOrError.range.start)
                                 const to = positionToOffset(view.state.doc, hoverOrError.range.end)
                                 if (from !== null && to !== null) {

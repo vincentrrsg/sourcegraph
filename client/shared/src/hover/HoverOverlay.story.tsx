@@ -11,7 +11,7 @@ import bitbucketCodeHostStyles from '@sourcegraph/browser/src/shared/code-hosts/
 import { registerHighlightContributions } from '@sourcegraph/common'
 
 import { HoverOverlay, HoverOverlayClassProps } from './HoverOverlay'
-import { commonProps, FIXTURE_ACTIONS, FIXTURE_CONTENT, FIXTURE_SEMANTIC_BADGE } from './HoverOverlay.fixtures'
+import { commonProps, FIXTURE_CONTENT, FIXTURE_SEMANTIC_BADGE } from './HoverOverlay.fixtures'
 
 const decorator: DecoratorFn = story => (
     <>
@@ -53,7 +53,6 @@ export const BitbucketStyles: Story = (props = {}) => (
                     contents: [FIXTURE_CONTENT],
                     aggregatedBadges: [FIXTURE_SEMANTIC_BADGE],
                 }}
-                actionsOrError={FIXTURE_ACTIONS}
             />
         </CompatRouter>
     </BrowserRouter>

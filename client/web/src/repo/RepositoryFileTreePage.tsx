@@ -84,7 +84,6 @@ export const RepositoryFileTreePage: React.FunctionComponent<
                 telemetryService={context.telemetryService}
                 authenticatedUser={context.authenticatedUser}
                 isSourcegraphDotCom={context.isSourcegraphDotCom}
-                extensionsController={context.extensionsController}
                 commitID={resolvedRevision?.commitID}
                 filePath={filePath}
                 repoID={repo?.id}

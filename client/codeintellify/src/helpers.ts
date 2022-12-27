@@ -1,7 +1,6 @@
 import { isObject } from 'lodash'
-import { Observable, from } from 'rxjs'
+import { Observable, from, Subscribable } from 'rxjs'
 import { map } from 'rxjs/operators'
-import { Subscribable } from 'sourcegraph'
 
 import { isDefined } from '@sourcegraph/common'
 

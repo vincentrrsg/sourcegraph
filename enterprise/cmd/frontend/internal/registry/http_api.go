@@ -9,7 +9,6 @@ import (
 	"github.com/sourcegraph/sourcegraph/cmd/frontend/envvar"
 	frontendregistry "github.com/sourcegraph/sourcegraph/cmd/frontend/registry/api"
 	registry "github.com/sourcegraph/sourcegraph/cmd/frontend/registry/client"
-	"github.com/sourcegraph/sourcegraph/internal/conf"
 	"github.com/sourcegraph/sourcegraph/internal/database"
 )
 
@@ -22,11 +21,6 @@ func init() {
 // handleRegistry serves the external HTTP API for the extension registry.
 func handleRegistry(db database.DB) func(w http.ResponseWriter, r *http.Request) (err error) {
 	return func(w http.ResponseWriter, r *http.Request) (err error) {
-		if conf.Extensions() == nil {
-			w.WriteHeader(http.StatusNotFound)
-			return nil
-		}
-
 		// Identify this response as coming from the registry API.
 		w.Header().Set(registry.MediaTypeHeaderName, registry.MediaType)
 

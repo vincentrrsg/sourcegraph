@@ -223,14 +223,6 @@
             "pointer": true
           }
         },
-        "enableGoImportsSearchQueryTransform": {
-          "description": "Lets you easily search for all files using a Go package. Adds a new operator `go.imports`: for all import statements of the package passed to the operator.",
-          "type": "boolean",
-          "default": false,
-          "!go": {
-            "pointer": true
-          }
-        },
         "codeInsightsCompute": {
           "description": "Enables Compute powered Code Insights",
           "type": "boolean",
@@ -522,7 +514,7 @@
       "default": 0
     },
     "codeIntelligence.maxPanelResults": {
-      "description": "Maximum number of references/definitions (or other code intelligence results provided by extensions) shown in the panel. If not set a default value will be used to ensure best performance.",
+      "description": "Maximum number of references/definitions shown in the panel. If not set a default value will be used to ensure best performance.",
       "type": "integer"
     },
     "codeIntelligence.clickToGoToDefinition": {
@@ -641,26 +633,6 @@
       "type": "string",
       "enum": ["browser-extension", "native-integration"],
       "default": "browser-extension"
-    },
-    "extensions": {
-      "description": "The Sourcegraph extensions to use. Enable an extension by adding a property `\"my/extension\": true` (where `my/extension` is the extension ID). Override a previously enabled extension and disable it by setting its value to `false`.",
-      "type": "object",
-      "propertyNames": {
-        "type": "string",
-        "description": "A valid extension ID.",
-        "pattern": "^([^/]+/)?[^/]+/[^/]+$"
-      },
-      "additionalProperties": {
-        "type": "boolean",
-        "description": "`true` to enable the extension, `false` to disable the extension (if it was previously enabled)"
-      }
-    },
-    "extensions.activeLoggers": {
-      "description": "The Sourcegraph extensions, by ID (e.g. `my/extension`), whose logs should be visible in the console.",
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
     },
     "search.hideSuggestions": {
       "description": "Disable search suggestions below the search bar when constructing queries. Defaults to false.",

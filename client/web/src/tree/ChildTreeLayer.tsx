@@ -45,7 +45,6 @@ export const ChildTreeLayer: React.FunctionComponent<React.PropsWithChildren<Chi
         setActiveNode: props.setActiveNode,
         onSelect: props.onSelect,
         commitID: props.commitID,
-        extensionsController: props.extensionsController,
     }
 
     // Only show ".." (go up) for non-root file trees

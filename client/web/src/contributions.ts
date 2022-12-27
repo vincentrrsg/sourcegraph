@@ -3,13 +3,9 @@ import React from 'react'
 import * as H from 'history'
 import { Subscription } from 'rxjs'
 
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
-import { registerHoverContributions } from '@sourcegraph/shared/src/hover/actions'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 
-import { registerSearchStatsContributions } from './search/stats/contributions'
-
-interface Props extends ExtensionsControllerProps, PlatformContextProps {
+interface Props extends PlatformContextProps {
     history: H.History
 }
 
@@ -27,18 +23,6 @@ export class GlobalContributions extends React.Component<Props> {
             .catch(error => {
                 throw error // Throw error to the <ErrorBoundary />
             })
-
-        const { extensionsController } = this.props
-        if (extensionsController !== null) {
-            this.subscriptions.add(
-                registerHoverContributions({
-                    ...this.props,
-                    extensionsController,
-                    locationAssign: location.assign.bind(location),
-                })
-            )
-        }
-        this.subscriptions.add(registerSearchStatsContributions(this.props))
     }
 
     public componentWillUnmount(): void {

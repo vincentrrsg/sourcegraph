@@ -9,7 +9,6 @@ import { asError } from '@sourcegraph/common'
 import { limitHit, StreamingProgress, StreamingSearchResultsList } from '@sourcegraph/search-ui'
 import { FetchFileParameters } from '@sourcegraph/shared/src/backend/file'
 import { FilePrefetcher } from '@sourcegraph/shared/src/components/PrefetchableFile'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { SearchPatternType } from '@sourcegraph/shared/src/graphql-operations'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { QueryUpdate, SearchContextProps } from '@sourcegraph/shared/src/search'
@@ -49,7 +48,6 @@ export interface StreamingSearchResultsProps
     extends SearchStreamingProps,
         Pick<SearchContextProps, 'selectedSearchContextSpec' | 'searchContextsEnabled'>,
         SettingsCascadeProps,
-        ExtensionsControllerProps<'executeCommand' | 'extHostAPI'>,
         PlatformContextProps<'settings' | 'requestGraphQL' | 'sourcegraphURL'>,
         TelemetryProps,
         ThemeProps,
@@ -70,7 +68,6 @@ export const StreamingSearchResults: FC<StreamingSearchResultsProps> = props => 
         telemetryService,
         codeInsightsEnabled,
         isSourcegraphDotCom,
-        extensionsController,
         searchAggregationEnabled,
     } = props
 
@@ -100,8 +97,6 @@ export const StreamingSearchResults: FC<StreamingSearchResultsProps> = props => 
     const [showMobileSidebar, setShowMobileSidebar] = useState(false)
 
     // Derived state
-    const extensionHostAPI =
-        extensionsController !== null && window.context.enableLegacyExtensions ? extensionsController.extHostAPI : null
     const trace = useMemo(() => new URLSearchParams(location.search).get('trace') ?? undefined, [location.search])
     const featureOverrides = useDeepMemo(
         // Nested use memo here is used for avoiding extra object calculation step on each render
@@ -122,7 +117,7 @@ export const StreamingSearchResults: FC<StreamingSearchResultsProps> = props => 
         [caseSensitive, patternType, searchMode, trace, featureOverrides]
     )
 
-    const results = useCachedSearchResults(streamSearch, submittedURLQuery, options, extensionHostAPI, telemetryService)
+    const results = useCachedSearchResults(streamSearch, submittedURLQuery, options, telemetryService)
 
     // Log view event on first load
     useEffect(

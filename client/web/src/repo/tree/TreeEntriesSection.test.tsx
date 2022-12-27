@@ -34,7 +34,6 @@ describe('TreeEntriesSection', () => {
                             url: '/github.com/sourcegraph/codeintellify/-/blob/.eslintrc.json',
                         },
                     ]}
-                    isLightTheme={true}
                 />
             ).asFragment()
         ).toMatchSnapshot()
@@ -70,7 +69,6 @@ describe('TreeEntriesSection', () => {
                             url: '/github.com/sourcegraph/codeintellify/-/blob/src/helpers.ts',
                         },
                     ]}
-                    isLightTheme={true}
                 />
             ).asFragment()
         ).toMatchSnapshot()
@@ -112,7 +110,6 @@ describe('TreeEntriesSection', () => {
                             url: '/github.com/vanadium/core/-/blob/x/ref/envvar.go',
                         },
                     ]}
-                    isLightTheme={true}
                 />
             ).asFragment()
         ).toMatchSnapshot()

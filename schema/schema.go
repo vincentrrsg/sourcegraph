@@ -633,8 +633,6 @@ type ExperimentalFeatures struct {
 	DebugLog *DebugLog `json:"debug.log,omitempty"`
 	// EnableGithubInternalRepoVisibility description: Enable support for visilibity of internal Github repositories
 	EnableGithubInternalRepoVisibility bool `json:"enableGithubInternalRepoVisibility,omitempty"`
-	// EnableLegacyExtensions description: Enable the extension registry and the use of extensions (doesn't affect code intel and git extras).
-	EnableLegacyExtensions bool `json:"enableLegacyExtensions,omitempty"`
 	// EnablePermissionsWebhooks description: Enables webhook consumers to sync permissions from external services faster than the defaults schedule
 	EnablePermissionsWebhooks bool `json:"enablePermissionsWebhooks,omitempty"`
 	// EnablePostSignupFlow description: Enables post sign-up user flow to add code hosts and sync code
@@ -691,7 +689,7 @@ type ExperimentalFeatures struct {
 }
 
 func (v ExperimentalFeatures) MarshalJSON() ([]byte, error) {
-	m := make(map[string]any, len(v.Additional)+31)
+	m := make(map[string]any, len(v.Additional)+30)
 	for k, v := range v.Additional {
 		m[k] = v
 	}
@@ -699,7 +697,6 @@ func (v ExperimentalFeatures) MarshalJSON() ([]byte, error) {
 	m["customGitFetch"] = v.CustomGitFetch
 	m["debug.log"] = v.DebugLog
 	m["enableGithubInternalRepoVisibility"] = v.EnableGithubInternalRepoVisibility
-	m["enableLegacyExtensions"] = v.EnableLegacyExtensions
 	m["enablePermissionsWebhooks"] = v.EnablePermissionsWebhooks
 	m["enablePostSignupFlow"] = v.EnablePostSignupFlow
 	m["enableWebhookRepoSync"] = v.EnableWebhookRepoSync
@@ -743,7 +740,6 @@ func (v *ExperimentalFeatures) UnmarshalJSON(data []byte) error {
 	delete(m, "customGitFetch")
 	delete(m, "debug.log")
 	delete(m, "enableGithubInternalRepoVisibility")
-	delete(m, "enableLegacyExtensions")
 	delete(m, "enablePermissionsWebhooks")
 	delete(m, "enablePostSignupFlow")
 	delete(m, "enableWebhookRepoSync")
@@ -788,20 +784,6 @@ type ExportUsageTelemetry struct {
 	TopicName string `json:"topicName,omitempty"`
 	// TopicProjectName description: GCP project name containing the usage data pubsub topic
 	TopicProjectName string `json:"topicProjectName,omitempty"`
-}
-
-// Extensions description: Configures Sourcegraph extensions.
-type Extensions struct {
-	// AllowOnlySourcegraphAuthoredExtensions description: Allow only Sourcegraph authored extensions from the default remote registry. If not set, all remote extensions may be used from the remote registry. If certain extensions are marked as allowed in `allowRemoteExtensions` field or `remoteRegistry` points to other than default registry, `allowOnlySourcegraphAuthoredExtensions` setting value will be ignored. To completely disable the remote registry, set `remoteRegistry` to `false`.
-	AllowOnlySourcegraphAuthoredExtensions bool `json:"allowOnlySourcegraphAuthoredExtensions,omitempty"`
-	// AllowRemoteExtensions description: Allow only the explicitly listed remote extensions (by extension ID, such as "alice/myextension") from the remote registry. If not set, all remote extensions may be used from the remote registry. To completely disable the remote registry, set `remoteRegistry` to `false`.
-	//
-	// Only available in Sourcegraph Enterprise.
-	AllowRemoteExtensions []string `json:"allowRemoteExtensions,omitempty"`
-	// Disabled description: Disable all usage of extensions.
-	Disabled *bool `json:"disabled,omitempty"`
-	// RemoteRegistry description: The remote extension registry URL, or `false` to not use a remote extension registry. If not set, the default remote extension registry URL is used.
-	RemoteRegistry any `json:"remoteRegistry,omitempty"`
 }
 type ExternalIdentity struct {
 	// AuthProviderID description: The value of the `configID` field of the targeted authentication provider.
@@ -1886,14 +1868,10 @@ type Settings struct {
 	CodeIntelligenceAutoIndexRepositoryGroups []string `json:"codeIntelligence.autoIndexRepositoryGroups,omitempty"`
 	// CodeIntelligenceClickToGoToDefinition description: Enable click to go to definition.
 	CodeIntelligenceClickToGoToDefinition bool `json:"codeIntelligence.clickToGoToDefinition,omitempty"`
-	// CodeIntelligenceMaxPanelResults description: Maximum number of references/definitions (or other code intelligence results provided by extensions) shown in the panel. If not set a default value will be used to ensure best performance.
+	// CodeIntelligenceMaxPanelResults description: Maximum number of references/definitions shown in the panel. If not set a default value will be used to ensure best performance.
 	CodeIntelligenceMaxPanelResults int `json:"codeIntelligence.maxPanelResults,omitempty"`
 	// ExperimentalFeatures description: Experimental features and settings.
 	ExperimentalFeatures *SettingsExperimentalFeatures `json:"experimentalFeatures,omitempty"`
-	// Extensions description: The Sourcegraph extensions to use. Enable an extension by adding a property `"my/extension": true` (where `my/extension` is the extension ID). Override a previously enabled extension and disable it by setting its value to `false`.
-	Extensions map[string]bool `json:"extensions,omitempty"`
-	// ExtensionsActiveLoggers description: The Sourcegraph extensions, by ID (e.g. `my/extension`), whose logs should be visible in the console.
-	ExtensionsActiveLoggers []string `json:"extensions.activeLoggers,omitempty"`
 	// FileSidebarVisibleByDefault description: Whether the sidebar on the repo view should be open by default.
 	FileSidebarVisibleByDefault bool `json:"fileSidebarVisibleByDefault,omitempty"`
 	// HistoryDefaultPageSize description: Custom page size for the history tab. If set, the history tab will populate that number of commits the first time the history tab is opened and then double the number of commits progressively.
@@ -1952,7 +1930,7 @@ type Settings struct {
 }
 
 func (v Settings) MarshalJSON() ([]byte, error) {
-	m := make(map[string]any, len(v.Additional)+42)
+	m := make(map[string]any, len(v.Additional)+40)
 	for k, v := range v.Additional {
 		m[k] = v
 	}
@@ -1974,8 +1952,6 @@ func (v Settings) MarshalJSON() ([]byte, error) {
 	m["codeIntelligence.clickToGoToDefinition"] = v.CodeIntelligenceClickToGoToDefinition
 	m["codeIntelligence.maxPanelResults"] = v.CodeIntelligenceMaxPanelResults
 	m["experimentalFeatures"] = v.ExperimentalFeatures
-	m["extensions"] = v.Extensions
-	m["extensions.activeLoggers"] = v.ExtensionsActiveLoggers
 	m["fileSidebarVisibleByDefault"] = v.FileSidebarVisibleByDefault
 	m["history.defaultPageSize"] = v.HistoryDefaultPageSize
 	m["history.preferAbsoluteTimestamps"] = v.HistoryPreferAbsoluteTimestamps
@@ -2029,8 +2005,6 @@ func (v *Settings) UnmarshalJSON(data []byte) error {
 	delete(m, "codeIntelligence.clickToGoToDefinition")
 	delete(m, "codeIntelligence.maxPanelResults")
 	delete(m, "experimentalFeatures")
-	delete(m, "extensions")
-	delete(m, "extensions.activeLoggers")
 	delete(m, "fileSidebarVisibleByDefault")
 	delete(m, "history.defaultPageSize")
 	delete(m, "history.preferAbsoluteTimestamps")
@@ -2085,8 +2059,6 @@ type SettingsExperimentalFeatures struct {
 	Editor *string `json:"editor,omitempty"`
 	// EnableCodeMirrorFileView description: Uses CodeMirror to display files. In this first iteration not all features of the current file view are available.
 	EnableCodeMirrorFileView *bool `json:"enableCodeMirrorFileView,omitempty"`
-	// EnableGoImportsSearchQueryTransform description: Lets you easily search for all files using a Go package. Adds a new operator `go.imports`: for all import statements of the package passed to the operator.
-	EnableGoImportsSearchQueryTransform *bool `json:"enableGoImportsSearchQueryTransform,omitempty"`
 	// EnableLazyBlobSyntaxHighlighting description: Fetch un-highlighted blob contents to render immediately, decorate with syntax highlighting once loaded.
 	EnableLazyBlobSyntaxHighlighting *bool `json:"enableLazyBlobSyntaxHighlighting,omitempty"`
 	// EnableLazyFileResultSyntaxHighlighting description: Fetch un-highlighted file result contents to render immediately, decorate with syntax highlighting once loaded.
@@ -2144,7 +2116,7 @@ type SettingsExperimentalFeatures struct {
 }
 
 func (v SettingsExperimentalFeatures) MarshalJSON() ([]byte, error) {
-	m := make(map[string]any, len(v.Additional)+38)
+	m := make(map[string]any, len(v.Additional)+37)
 	for k, v := range v.Additional {
 		m[k] = v
 	}
@@ -2159,7 +2131,6 @@ func (v SettingsExperimentalFeatures) MarshalJSON() ([]byte, error) {
 	m["codeNavigation"] = v.CodeNavigation
 	m["editor"] = v.Editor
 	m["enableCodeMirrorFileView"] = v.EnableCodeMirrorFileView
-	m["enableGoImportsSearchQueryTransform"] = v.EnableGoImportsSearchQueryTransform
 	m["enableLazyBlobSyntaxHighlighting"] = v.EnableLazyBlobSyntaxHighlighting
 	m["enableLazyFileResultSyntaxHighlighting"] = v.EnableLazyFileResultSyntaxHighlighting
 	m["enableMergedFileSymbolSidebar"] = v.EnableMergedFileSymbolSidebar
@@ -2210,7 +2181,6 @@ func (v *SettingsExperimentalFeatures) UnmarshalJSON(data []byte) error {
 	delete(m, "codeNavigation")
 	delete(m, "editor")
 	delete(m, "enableCodeMirrorFileView")
-	delete(m, "enableGoImportsSearchQueryTransform")
 	delete(m, "enableLazyBlobSyntaxHighlighting")
 	delete(m, "enableLazyFileResultSyntaxHighlighting")
 	delete(m, "enableMergedFileSymbolSidebar")
@@ -2389,8 +2359,6 @@ type SiteConfiguration struct {
 	// ExperimentalFeatures description: Experimental features and settings.
 	ExperimentalFeatures *ExperimentalFeatures `json:"experimentalFeatures,omitempty"`
 	ExportUsageTelemetry *ExportUsageTelemetry `json:"exportUsageTelemetry,omitempty"`
-	// Extensions description: Configures Sourcegraph extensions.
-	Extensions *Extensions `json:"extensions,omitempty"`
 	// ExternalServiceUserMode description: Enable to allow users to add external services for public and private repositories to the Sourcegraph instance.
 	ExternalServiceUserMode string `json:"externalService.userMode,omitempty"`
 	// ExternalURL description: The externally accessible URL for Sourcegraph (i.e., what you type into your browser). Previously called `appURL`. Only root URLs are allowed.
@@ -2498,7 +2466,7 @@ type SiteConfiguration struct {
 }
 
 func (v SiteConfiguration) MarshalJSON() ([]byte, error) {
-	m := make(map[string]any, len(v.Additional)+101)
+	m := make(map[string]any, len(v.Additional)+100)
 	for k, v := range v.Additional {
 		m[k] = v
 	}
@@ -2551,7 +2519,6 @@ func (v SiteConfiguration) MarshalJSON() ([]byte, error) {
 	m["executors.srcCLIImageTag"] = v.ExecutorsSrcCLIImageTag
 	m["experimentalFeatures"] = v.ExperimentalFeatures
 	m["exportUsageTelemetry"] = v.ExportUsageTelemetry
-	m["extensions"] = v.Extensions
 	m["externalService.userMode"] = v.ExternalServiceUserMode
 	m["externalURL"] = v.ExternalURL
 	m["git.cloneURLToRepositoryName"] = v.GitCloneURLToRepositoryName
@@ -2665,7 +2632,6 @@ func (v *SiteConfiguration) UnmarshalJSON(data []byte) error {
 	delete(m, "executors.srcCLIImageTag")
 	delete(m, "experimentalFeatures")
 	delete(m, "exportUsageTelemetry")
-	delete(m, "extensions")
 	delete(m, "externalService.userMode")
 	delete(m, "externalURL")
 	delete(m, "git.cloneURLToRepositoryName")

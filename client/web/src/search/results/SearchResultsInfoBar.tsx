@@ -4,10 +4,6 @@ import { mdiChevronDoubleUp, mdiChevronDoubleDown } from '@mdi/js'
 import classNames from 'classnames'
 import * as H from 'history'
 
-import { ContributableMenu } from '@sourcegraph/client-api'
-import { ActionItem } from '@sourcegraph/shared/src/actions/ActionItem'
-import { ActionsContainer } from '@sourcegraph/shared/src/actions/ActionsContainer'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { SearchPatternTypeProps, CaseSensitivityProps } from '@sourcegraph/shared/src/search'
 import { FilterKind, findFilter } from '@sourcegraph/shared/src/search/query/query'
@@ -30,8 +26,7 @@ import { SearchActionsMenu } from './SearchActionsMenu'
 import styles from './SearchResultsInfoBar.module.scss'
 
 export interface SearchResultsInfoBarProps
-    extends ExtensionsControllerProps<'executeCommand' | 'extHostAPI'>,
-        PlatformContextProps<'settings' | 'sourcegraphURL'>,
+    extends PlatformContextProps<'settings' | 'sourcegraphURL'>,
         TelemetryProps,
         SearchPatternTypeProps,
         Pick<CaseSensitivityProps, 'caseSensitive'> {
@@ -137,15 +132,6 @@ export const SearchResultsInfoBar: React.FunctionComponent<
         [props.enableCodeMonitoring, props.patternType, props.query]
     )
 
-    const extraContext = useMemo(
-        () => ({
-            searchQuery: props.query || null,
-            patternType: props.patternType,
-            caseSensitive: props.caseSensitive,
-        }),
-        [props.query, props.patternType, props.caseSensitive]
-    )
-
     // Show/hide mobile filters menu
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     const onShowMobileFiltersClicked = (): void => {
@@ -153,8 +139,6 @@ export const SearchResultsInfoBar: React.FunctionComponent<
         setShowMobileFilters(newShowFilters)
         props.onShowMobileFiltersChanged?.(newShowFilters)
     }
-
-    const { extensionsController } = props
 
     return (
         <aside
@@ -184,37 +168,6 @@ export const SearchResultsInfoBar: React.FunctionComponent<
                 <div className={styles.expander} />
 
                 <ul className="nav align-items-center">
-                    {extensionsController !== null && window.context.enableLegacyExtensions ? (
-                        <ActionsContainer
-                            {...props}
-                            extensionsController={extensionsController}
-                            extraContext={extraContext}
-                            menu={ContributableMenu.SearchResultsToolbar}
-                        >
-                            {actionItems => (
-                                <>
-                                    {actionItems.map(actionItem => (
-                                        <ActionItem
-                                            {...props}
-                                            {...actionItem}
-                                            extensionsController={extensionsController}
-                                            key={actionItem.action.id}
-                                            showLoadingSpinnerDuringExecution={false}
-                                            className="mr-2 text-decoration-none"
-                                            actionItemStyleProps={{
-                                                actionItemVariant: 'secondary',
-                                                actionItemSize: 'sm',
-                                                actionItemOutline: true,
-                                            }}
-                                        />
-                                    ))}
-                                </>
-                            )}
-                        </ActionsContainer>
-                    ) : null}
-
-                    <li className={styles.divider} aria-hidden="true" />
-
                     <SearchActionsMenu
                         query={props.query}
                         patternType={props.patternType}

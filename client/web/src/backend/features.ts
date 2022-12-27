@@ -1,11 +1,8 @@
 import { Observable, from, concat } from 'rxjs'
 import { switchMap } from 'rxjs/operators'
-import { DocumentHighlight } from 'sourcegraph'
 
 import { HoverMerged } from '@sourcegraph/client-api'
 import { MaybeLoadingResult } from '@sourcegraph/codeintellify'
-import { wrapRemoteObservable } from '@sourcegraph/shared/src/api/client/api/common'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import {
     FileSpec,
     UIPositionSpec,

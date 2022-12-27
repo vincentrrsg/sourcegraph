@@ -4,7 +4,6 @@ import { mdiFileDocumentOutline, mdiFolderOutline } from '@mdi/js'
 import classNames from 'classnames'
 
 import { TreeEntryFields } from '@sourcegraph/shared/src/graphql-operations'
-import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { Link, Icon } from '@sourcegraph/wildcard'
 
 import styles from './TreeEntriesSection.module.scss'
@@ -57,7 +56,7 @@ const TreeEntry: React.FunctionComponent<
     </li>
 )
 
-interface TreeEntriesSectionProps extends ThemeProps {
+interface TreeEntriesSectionProps {
     parentPath: string
     entries: Pick<TreeEntryFields, 'name' | 'isDirectory' | 'url' | 'path'>[]
 }
@@ -65,7 +64,6 @@ interface TreeEntriesSectionProps extends ThemeProps {
 export const TreeEntriesSection: React.FunctionComponent<React.PropsWithChildren<TreeEntriesSectionProps>> = ({
     parentPath,
     entries,
-    isLightTheme,
 }) => {
     const directChildren = entries.filter(entry => entry.path === [parentPath, entry.name].filter(Boolean).join('/'))
     if (directChildren.length === 0) {

@@ -7,7 +7,6 @@ import { Observable } from 'rxjs'
 import { TabbedPanelContent } from '@sourcegraph/branded/src/components/panel/TabbedPanelContent'
 import { isMacPlatform } from '@sourcegraph/common'
 import { FetchFileParameters } from '@sourcegraph/shared/src/backend/file'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { useKeyboardShortcut } from '@sourcegraph/shared/src/keyboardShortcuts/useKeyboardShortcut'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
 import { Shortcut } from '@sourcegraph/shared/src/react-shortcuts'
@@ -32,7 +31,6 @@ import { useScrollToLocationHash } from './components/useScrollToLocationHash'
 import { GlobalContributions } from './contributions'
 import { useFeatureFlag } from './featureFlags/useFeatureFlag'
 import { GlobalAlerts } from './global/GlobalAlerts'
-import { GlobalDebug } from './global/GlobalDebug'
 import { useHandleSubmitFeedback } from './hooks'
 import { SurveyToast } from './marketing/toast'
 import { GlobalNavbar } from './nav/GlobalNavbar'
@@ -66,7 +64,6 @@ export interface LayoutProps
     extends RouteComponentProps<{}>,
         SettingsCascadeProps<Settings>,
         PlatformContextProps,
-        ExtensionsControllerProps,
         TelemetryProps,
         SearchContextProps,
         HomePanelsProps,
@@ -245,7 +242,6 @@ export const Layout: React.FunctionComponent<React.PropsWithChildren<LayoutProps
                     isRepositoryRelatedPage={isRepositoryRelatedPage}
                     showKeyboardShortcutsHelp={showKeyboardShortcutsHelp}
                     showFeedbackModal={showFeedbackModal}
-                    enableLegacyExtensions={window.context.enableLegacyExtensions}
                 />
             )}
             {needsSiteInit && !isSiteInit && <Redirect to="/site-admin/init" />}
@@ -294,15 +290,7 @@ export const Layout: React.FunctionComponent<React.PropsWithChildren<LayoutProps
                         />
                     </Panel>
                 )}
-            <GlobalContributions
-                key={3}
-                extensionsController={props.extensionsController}
-                platformContext={props.platformContext}
-                history={props.history}
-            />
-            {props.extensionsController !== null ? (
-                <GlobalDebug {...props} extensionsController={props.extensionsController} />
-            ) : null}
+            <GlobalContributions key={3} platformContext={props.platformContext} history={props.history} />
             {(isSearchNotebookListPage || (isSearchRelatedPage && !isSearchHomepage)) && (
                 <NotepadContainer onCreateNotebook={props.onCreateNotebookFromNotepad} />
             )}

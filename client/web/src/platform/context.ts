@@ -77,13 +77,7 @@ export function createPlatformContext(): PlatformContext {
         },
         getGraphQLClient: getWebGraphQLClient,
         requestGraphQL: ({ request, variables }) => requestGraphQL(request, variables),
-        createExtensionHost: async () =>
-            (await import('@sourcegraph/shared/src/api/extension/worker')).createExtensionHost(),
-        urlToFile: toPrettyWebBlobURL,
-        getScriptURLForExtension: () => undefined,
         sourcegraphURL: window.context.externalURL,
-        clientApplication: 'sourcegraph',
-        sideloadedExtensionURL: new LocalStorageSubject<string | null>('sideloadedExtensionURL', null),
         telemetryService: eventLogger,
     }
 

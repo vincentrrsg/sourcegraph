@@ -4,17 +4,14 @@ import classNames from 'classnames'
 import AlertCircleIcon from 'mdi-react/AlertCircleIcon'
 import MapSearchIcon from 'mdi-react/MapSearchIcon'
 import { Route, RouteComponentProps, Switch } from 'react-router'
-import { combineLatest, from, Observable, of, Subject, Subscription } from 'rxjs'
+import { combineLatest, Observable, Subject, Subscription } from 'rxjs'
 import { catchError, distinctUntilChanged, map, startWith, switchMap } from 'rxjs/operators'
 
-import { asError, createAggregateError, ErrorLike, isErrorLike, isDefined, logger } from '@sourcegraph/common'
+import { asError, createAggregateError, ErrorLike, isErrorLike, logger } from '@sourcegraph/common'
 import { gql } from '@sourcegraph/http-client'
-import { getConfiguredSideloadedExtension } from '@sourcegraph/shared/src/api/client/enabledExtensions'
-import { extensionIDsFromSettings } from '@sourcegraph/shared/src/extensions/extension'
-import { queryConfiguredRegistryExtensions } from '@sourcegraph/shared/src/extensions/helpers'
 import { Scalars } from '@sourcegraph/shared/src/graphql-operations'
 import { PlatformContextProps } from '@sourcegraph/shared/src/platform/context'
-import { gqlToCascade, SettingsCascadeProps, SettingsSubject } from '@sourcegraph/shared/src/settings/settings'
+import { SettingsCascadeProps, SettingsSubject } from '@sourcegraph/shared/src/settings/settings'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 import { ThemeProps } from '@sourcegraph/shared/src/theme'
 import { LoadingSpinner, PageHeader, ErrorMessage } from '@sourcegraph/wildcard'
@@ -25,7 +22,6 @@ import { HeroPage } from '../components/HeroPage'
 import { SettingsCascadeResult } from '../graphql-operations'
 import { eventLogger } from '../tracking/eventLogger'
 
-import { mergeSettingsSchemas } from './configuration'
 import { SettingsPage } from './SettingsPage'
 
 const NotFoundPage: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => (
@@ -45,7 +41,6 @@ interface SettingsAreaPageCommonProps extends PlatformContextProps, SettingsCasc
 
 interface SettingsData {
     subjects: SettingsSubject[]
-    settingsJSONSchema: { $id: string }
 }
 
 /** Properties passed to all pages in the settings area. */
@@ -99,11 +94,7 @@ export class SettingsArea extends React.Component<Props, State> {
                 .pipe(
                     switchMap(([{ id }]) =>
                         fetchSettingsCascade(id).pipe(
-                            switchMap(cascade =>
-                                this.getMergedSettingsJSONSchema(cascade).pipe(
-                                    map(settingsJSONSchema => ({ subjects: cascade.subjects, settingsJSONSchema }))
-                                )
-                            ),
+                            map(cascade => ({ subjects: cascade.subjects })),
                             catchError(error => [asError(error)]),
                             map(dataOrError => ({ dataOrError }))
                         )
@@ -192,37 +183,6 @@ export class SettingsArea extends React.Component<Props, State> {
     }
 
     private onUpdate = (): void => this.refreshRequests.next()
-
-    private getMergedSettingsJSONSchema(cascade: SettingsSubjects): Observable<{ $id: string }> {
-        return combineLatest([
-            queryConfiguredRegistryExtensions(
-                this.props.platformContext,
-                extensionIDsFromSettings(gqlToCascade(cascade))
-            ).pipe(
-                catchError(error => {
-                    logger.warn('Unable to get extension settings JSON Schemas for settings editor.', { error })
-                    return of([])
-                })
-            ),
-            from(this.props.platformContext.sideloadedExtensionURL).pipe(
-                switchMap(url => (url ? getConfiguredSideloadedExtension(url) : of(null))),
-                catchError(error => {
-                    logger.error('Error sideloading extension', error)
-                    return of(null)
-                })
-            ),
-        ]).pipe(
-            map(([registryExtensions, sideloadedExtension]) =>
-                // Ensure that sideloaded extension settings keys have precedence over
-                // the same keys from its registry extension counterpart
-                [sideloadedExtension, ...registryExtensions].filter(isDefined)
-            ),
-            map(extensions => ({
-                $id: 'mergedSettings.schema.json#',
-                ...mergeSettingsSchemas(extensions),
-            }))
-        )
-    }
 }
 
 function fetchSettingsCascade(subject: Scalars['ID']): Observable<SettingsSubjects> {

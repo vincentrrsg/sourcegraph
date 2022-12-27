@@ -3,7 +3,6 @@ import { distinctUntilChanged, map, mapTo, mergeMap, observeOn, switchMap, tap, 
 
 import { wrapRemoteObservable } from '@sourcegraph/shared/src/api/client/api/common'
 import { applyLinkPreview } from '@sourcegraph/shared/src/components/linkPreviews/linkPreviews'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 
 import { MutationRecordLike, observeMutations } from '../../util/dom'
 

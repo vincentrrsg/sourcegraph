@@ -8,7 +8,6 @@ import { distinctUntilChanged, startWith } from 'rxjs/operators'
 import { Key } from 'ts-key-enum'
 
 import { formatSearchParameters } from '@sourcegraph/common'
-import { ExtensionsControllerProps } from '@sourcegraph/shared/src/extensions/controller'
 import { Scalars } from '@sourcegraph/shared/src/graphql-operations'
 import { TelemetryProps } from '@sourcegraph/shared/src/telemetry/telemetryService'
 import { AbsoluteRepo } from '@sourcegraph/shared/src/util/url'
@@ -20,7 +19,7 @@ import { getDomElement, scrollIntoView } from './util'
 
 import styles from './Tree.module.scss'
 
-interface Props extends AbsoluteRepo, ExtensionsControllerProps, TelemetryProps {
+interface Props extends AbsoluteRepo, TelemetryProps {
     history: H.History
     scrollRootSelector?: string
 
@@ -341,7 +340,6 @@ export class Tree extends React.PureComponent<Props, State> {
                     setChildNodes={this.setChildNode}
                     setActiveNode={this.setActiveNode}
                     sizeKey={this.props.sizeKey}
-                    extensionsController={this.props.extensionsController}
                     telemetryService={this.props.telemetryService}
                     enableMergedFileSymbolSidebar={this.props.enableMergedFileSymbolSidebar}
                 />

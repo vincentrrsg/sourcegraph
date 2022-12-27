@@ -1,9 +1,9 @@
-import React, { CSSProperties, useCallback, useState } from 'react'
+import React, { CSSProperties } from 'react'
 
 import { mdiClose } from '@mdi/js'
 import classNames from 'classnames'
 
-import { isErrorLike, sanitizeClass } from '@sourcegraph/common'
+import { isErrorLike } from '@sourcegraph/common'
 import { Card, Icon, Button } from '@sourcegraph/wildcard'
 
 import { ActionItem, ActionItemComponentProps } from '../actions/ActionItem'
@@ -11,11 +11,9 @@ import { PlatformContextProps } from '../platform/context'
 import { TelemetryProps } from '../telemetry/telemetryService'
 import { ThemeProps } from '../theme'
 
-import { CopyLinkIcon } from './CopyLinkIcon'
 import { toNativeEvent } from './helpers'
 import type { HoverContext, HoverOverlayBaseProps } from './HoverOverlay.types'
 import { HoverOverlayContents } from './HoverOverlayContents'
-import { HoverOverlayLogo } from './HoverOverlayLogo'
 import { useLogTelemetryEvent } from './useLogTelemetryEvent'
 
 import hoverOverlayStyle from './HoverOverlay.module.scss'
@@ -64,9 +62,6 @@ export interface PinOptions {
 
     /** Called when the close button is clicked */
     onCloseButtonClick?: () => void
-
-    /** Called when the copy link button is clicked */
-    onCopyLinkButtonClick?: () => void
 }
 
 const getOverlayStyle = (overlayPosition: HoverOverlayProps['overlayPosition']): CSSProperties => {
@@ -94,9 +89,6 @@ export const HoverOverlay: React.FunctionComponent<React.PropsWithChildren<Hover
         hoverRef,
         overlayPosition,
         actionsOrError,
-        platformContext,
-        telemetryService,
-        extensionsController,
         pinOptions,
         location,
 
@@ -114,14 +106,6 @@ export const HoverOverlay: React.FunctionComponent<React.PropsWithChildren<Hover
     } = props
 
     useLogTelemetryEvent(props)
-
-    const [copyLinkText, setCopyLinkText] = useState('Copy link')
-
-    const onCopyLink = useCallback(() => {
-        setCopyLinkText('Copied!')
-        setTimeout(() => setCopyLinkText('Copy link'), 3000)
-        pinOptions?.onCopyLinkButtonClick?.()
-    }, [pinOptions])
 
     if (!hoverOrError && (!actionsOrError || isErrorLike(actionsOrError))) {
         return null
@@ -193,7 +177,6 @@ export const HoverOverlay: React.FunctionComponent<React.PropsWithChildren<Hover
                                         showInlineError={true}
                                         platformContext={platformContext}
                                         telemetryService={telemetryService}
-                                        extensionsController={extensionsController}
                                         location={location}
                                         actionItemStyleProps={actionItemStyleProps}
                                     />
@@ -203,19 +186,6 @@ export const HoverOverlay: React.FunctionComponent<React.PropsWithChildren<Hover
                             {useBrandedLogo && <HoverOverlayLogo className={hoverOverlayStyle.overlayLogo} />}
                         </div>
                     )}
-
-                {pinOptions && (
-                    <button
-                        data-testid="hover-copy-link"
-                        className={classNames('d-flex', 'align-items-center', hoverOverlayStyle.actionsCopyLink)}
-                        onClick={onCopyLink}
-                        onKeyPress={onCopyLink}
-                        type="button"
-                    >
-                        <Icon className="mr-1" as={CopyLinkIcon} aria-hidden={true} />
-                        <span className="inline-block">{copyLinkText}</span>
-                    </button>
-                )}
             </div>
         </Card>
     )

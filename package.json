@@ -334,7 +334,8 @@
     "webpack-stats-plugin": "^1.1.1",
     "wildcard-mock-link": "^2.0.1",
     "worker-loader": "^3.0.8",
-    "yauzl": "^2.10.0"
+    "yauzl": "^2.10.0",
+    "@sourcegraph/eslint-plugin-wildcard": "workspace:*"
   },
   "dependencies": {
     "@apollo/client": "^3.5.0",
